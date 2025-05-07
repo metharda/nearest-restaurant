@@ -2,6 +2,9 @@
 
 # dependencies
 /apps/frontend/node_modules
+/apps/frontend/.next
+/apps/backend/.gradle
+/apps/backend/build
 /node_modules
 /.pnp
 .pnp.*
