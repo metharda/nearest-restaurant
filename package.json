@@ -1,0 +1,17 @@
+{
+  "name": "nearest-restaurant",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm run backend\"",
+    "backend": "cd apps/backend && ./gradlew bootRun"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.9.0",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

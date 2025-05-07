@@ -1,7 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/apps/frontend/node_modules
 /node_modules
 /.pnp
 .pnp.*
@@ -15,7 +14,7 @@
 /coverage
 
 # next.js
-frontend/.next/
+/.next/
 /out/
 
 # production
