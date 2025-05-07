@@ -1,1 +1,4 @@
-rootProject.name = 'finder'
+rootProject.name = 'backend'
+include 'AuthService'
+include 'PathService'
+include 'QueueService'
