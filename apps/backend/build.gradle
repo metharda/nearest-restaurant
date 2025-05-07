@@ -1,34 +1,52 @@
-plugins {
+plugins{
 	id 'java'
+	id 'application'
 	id 'org.springframework.boot' version '3.4.5'
-	id 'io.spring.dependency-management' version '1.1.7'
+	//id 'io.spring.dependency_management' version '1.1.7'
 }
-
-group = 'com.path'
-version = '0.0.1-SNAPSHOT'
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+allprojects{
+	apply plugin: 'java'
+	apply plugin: 'application'
+	apply plugin: 'org.springframework.boot'
+	//apply plugin: 'io.spring.dependency_management'
+	apply plugin: 'java-library'
+	apply from: "${rootDir}/dependencies.gradle"
+}
+subprojects{
+	group = 'com.project'
+	version = 'v.0.1'
+	java{
+		sourceCompatibility = JavaVersion.VERSION_22
+		targetCompatibility = JavaVersion.VERSION_22
+	}
+	tasks.withType(JavaCompile).tap {
+		configureEach {
+			options.encoding = 'UTF-8'
+		}
 	}
 }
-
-repositories {
-	mavenCentral()
+allprojects {
+	repositories {
+		mavenCentral()
+		google()
+	}
+	buildscript {
+		repositories {
+			mavenCentral()
+		}
+		dependencies {
+			classpath("org.springframework.boot:spring-boot-gradle-plugin:${versions.springBoot}")
+		}
+	}
+	dependencies {
+		implementation libs.springBootStarterWeb
+	}
+	test {
+		useJUnitPlatform()
+	}
 }
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-amqp'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.amqp:spring-rabbit-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
 }
