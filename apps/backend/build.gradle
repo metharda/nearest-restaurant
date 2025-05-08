@@ -2,13 +2,13 @@ plugins{
 	id 'java'
 	id 'application'
 	id 'org.springframework.boot' version '3.4.5'
-	//id 'io.spring.dependency_management' version '1.1.7'
+	id 'io.spring.dependency-management' version '1.1.7'
 }
 allprojects{
 	apply plugin: 'java'
 	apply plugin: 'application'
 	apply plugin: 'org.springframework.boot'
-	//apply plugin: 'io.spring.dependency_management'
+	apply plugin: 'io.spring.dependency-management'
 	apply plugin: 'java-library'
 	apply from: "${rootDir}/dependencies.gradle"
 }
@@ -40,6 +40,12 @@ allprojects {
 	}
 	dependencies {
 		implementation libs.springBootStarterWeb
+		implementation libs.jacksoncore
+		implementation libs.jwt_api
+		implementation libs.dotenv
+		runtimeOnly libs.jwt_impl
+		compileOnly libs.lombok
+		annotationProcessor libs.lombok
 	}
 	test {
 		useJUnitPlatform()
@@ -50,3 +56,28 @@ configurations {
 		extendsFrom annotationProcessor
 	}
 }
+
+/*task buildAuth{
+    dependsOn ':AuthService:bootRun'
+    group = 'application'
+    description = 'Run Auth service'
+}
+
+task buildPath{
+    dependsOn ':PathService:bootRun'
+    group = 'application'
+    description = 'Run Path service'
+}
+
+task buildQueue{
+    dependsOn ':QueueService:bootRun'
+    group = 'application'
+    description = 'Run Queue service'
+}
+
+task bootRunAll {
+    dependsOn bootRunAuth, bootRunPath, bootRunQueue
+    doLast {
+        println "All services are running."
+    }
+}*/
