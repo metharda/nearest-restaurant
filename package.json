@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm run backend\"",
-    "backend": "cd apps/backend && ./gradlew bootRun"
+    "dev": "make all",
+    "frontend": "make frontend",
+    "backend": "make backend",
+    "stop": "make stop"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +15,9 @@
   "packageManager": "pnpm@10.9.0",
   "devDependencies": {
     "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "@types/leaflet": "^1.9.17",
+    "leaflet": "^1.9.4"
   }
 }
