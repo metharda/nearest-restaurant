@@ -8,7 +8,7 @@ public class QueueService {
     private QueueService() {
     }
 
-    public static Queue<String> getQueue(String queueName) {
+    public static synchronized Queue<String> getQueue(String queueName) {
         if (Queues.containsKey(queueName)) {
             return Queues.get(queueName);
         } else {
@@ -18,19 +18,35 @@ public class QueueService {
         }
     }
 
-    public static void enqueue(String queueName, String data) {
+    public static synchronized void createQueue(String queueName) {
+        if (!Queues.containsKey(queueName)) {
+            Queues.put(queueName, new Queue<String>());
+        } else {
+            System.out.println("Queue '" + queueName + "' already exists.");
+        }
+    }
+
+    public static synchronized void enqueue(String queueName, String data) {
         Queue<String> queue = getQueue(queueName);
         queue.enqueue(data);
     }
 
-    public static String dequeue(String queueName) {
-        Queue<String> queue = getQueue(queueName);
-        return queue.dequeue();
+    public static synchronized String dequeue(String queueName) {
+        if (Queues.containsKey(queueName)) {
+            Queue<String> queue = Queues.get(queueName);
+            return queue.dequeue();
+        } else {
+            return null;
+        }
     }
 
-    public static String peek(String queueName) {
-        Queue<String> queue = getQueue(queueName);
-        return queue.peek();
+    public static synchronized String peek(String queueName) {
+        if (Queues.containsKey(queueName)) {
+            Queue<String> queue = Queues.get(queueName);
+            return queue.peek();
+        } else {
+            return null;
+        }
     }
     
 }
