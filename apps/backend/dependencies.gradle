@@ -5,7 +5,8 @@ ext{
             jackson             : '2.19.0',
             jsonwebtoken        : '0.12.6',
             java_dotenv         : '5.2.2',
-            springBootAmqp      : '3.2.5'
+            springBootAmqp      : '3.2.5',
+            junitJupiter        : '5.10.2'
     ]
 
     libs = [
@@ -16,6 +17,8 @@ ext{
             jacksoncore                 : "com.fasterxml.jackson.core:jackson-core:${versions.jackson}",
             jwt_api                     : "io.jsonwebtoken:jjwt-api:${versions.jsonwebtoken}",
             jwt_impl                    : "io.jsonwebtoken:jjwt-impl:${versions.jsonwebtoken}",
-            dotenv                      : "io.github.cdimascio:java-dotenv:${versions.java_dotenv}"
+            dotenv                      : "io.github.cdimascio:java-dotenv:${versions.java_dotenv}",
+            junitJupiterApi             : "org.junit.jupiter:junit-jupiter-api:${versions.junitJupiter}",
+            junitJupiterEngine          : "org.junit.jupiter:junit-jupiter-engine:${versions.junitJupiter}"
     ]
 }

@@ -24,6 +24,18 @@ subprojects{
 			options.encoding = 'UTF-8'
 		}
 	}
+
+	dependencyManagement {
+		imports {
+			mavenBom "org.junit:junit-bom:5.10.2"
+		}
+	}
+
+	if (project.name == 'QueueService') {
+		dependencies {
+			implementation libs.springBootStarterWebsocket
+		}
+	}
 }
 allprojects {
 	repositories {
@@ -43,10 +55,14 @@ allprojects {
 		implementation libs.jacksoncore
 		implementation libs.jwt_api
 		implementation libs.dotenv
+		implementation libs.junitJupiterApi
+		implementation libs.junitJupiterEngine
 		runtimeOnly libs.jwt_impl
 		compileOnly libs.lombok
 		annotationProcessor libs.lombok
 	}
+
+
 	test {
 		useJUnitPlatform()
 	}
