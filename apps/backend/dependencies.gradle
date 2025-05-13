@@ -4,15 +4,21 @@ ext{
             lombok              : '1.18.38',   
             jackson             : '2.19.0',
             jsonwebtoken        : '0.12.6',
-            java_dotenv         : '5.2.2'
+            java_dotenv         : '5.2.2',
+            springBootAmqp      : '3.2.5',
+            junitJupiter        : '5.10.2'
     ]
 
     libs = [
             springBootStarterWeb        : "org.springframework.boot:spring-boot-starter-web:${versions.springBoot}",
+            springBootStarterWebsocket  : "org.springframework.boot:spring-boot-starter-websocket:${versions.springBoot}",
+            springBootStarterAmqp       : "org.springframework.boot:spring-boot-starter-amqp:${versions.springBootAmqp}",
             lombok                      : "org.projectlombok:lombok",
             jacksoncore                 : "com.fasterxml.jackson.core:jackson-core:${versions.jackson}",
             jwt_api                     : "io.jsonwebtoken:jjwt-api:${versions.jsonwebtoken}",
             jwt_impl                    : "io.jsonwebtoken:jjwt-impl:${versions.jsonwebtoken}",
-            dotenv                      : "io.github.cdimascio:java-dotenv:${versions.java_dotenv}"
+            dotenv                      : "io.github.cdimascio:java-dotenv:${versions.java_dotenv}",
+            junitJupiterApi             : "org.junit.jupiter:junit-jupiter-api:${versions.junitJupiter}",
+            junitJupiterEngine          : "org.junit.jupiter:junit-jupiter-engine:${versions.junitJupiter}"
     ]
 }
