@@ -1,12 +1,16 @@
 'use client';
+import Sidebar from './sidebar';
 
-import { useEffect, useRef } from 'react';
+
 import 'leaflet/dist/leaflet.css';
 import { fetchNearbyRestaurants } from '@/lib/overpass';
-import { locationIcon, restaurantIcon } from '@/components/icons';
+
+import { useState, useEffect, useRef } from 'react';
+
 
 export default function Map() {
   const mapRef = useRef<HTMLDivElement>(null);
+  const [restaurants, setRestaurants] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadMap() {
@@ -18,6 +22,14 @@ export default function Map() {
           const lon = position.coords.longitude;
 
           const map = L.map(mapRef.current!).setView([lat, lon], 14);
+
+          const locationIcon = L.icon({
+  iconUrl: '/location.png',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+});
+
+
 
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
@@ -31,7 +43,7 @@ export default function Map() {
           const restaurants = await fetchNearbyRestaurants(lat, lon);
           restaurants.forEach((place: any) => {
             if (place.lat && place.lon) {
-              L.marker([place.lat, place.lon],{ icon: restaurantIcon })
+              L.marker([place.lat, place.lon],{ icon: restaurants })
                 .addTo(map)
                 .bindPopup(place.tags?.name || 'Restoran');
             }
@@ -47,13 +59,20 @@ export default function Map() {
   }, []);
 
   return (
+  <>
+    <Sidebar restaurants={restaurants} />
     <div
       ref={mapRef}
       style={{
-        position: 'fixed',
-        inset: 0,
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
         zIndex: 0,
       }}
     />
-  );
+  </>
+);
+
 }
