@@ -1,4 +1,4 @@
-package com.project.service;
+/*package com.project.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -34,4 +34,4 @@ public class OsrmService {
 
         return Double.MAX_VALUE;
     }
-}
+}*/

@@ -1,10 +1,9 @@
-
-package com.project.service;
+/*package com.project.service;
 
 import com.project.dto.Location;
-import com.project.dto.RestaurantResponse;
-import org.springframework.stereotype.Service;
+import com.project.dto.response.RestaurantResponseDto;
 
+import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -26,20 +25,20 @@ public class PathService {
             new Location("Mantı House", 41.021000, 28.970000)
     );
 
-    public List<RestaurantResponse> findNearestByRoad(Location userLocation) {
-        List<RestaurantResponse> results = new ArrayList<>();
+    public List<RestaurantResponseDto> findNearestByRoad(Location userLocation) {
+        List<RestaurantResponseDto> results = new ArrayList<>();
 
         for (Location restaurant : restaurantList) {
             double distance = osrmService.getRouteDistance(
                     userLocation.getLatitude(), userLocation.getLongitude(),
                     restaurant.getLatitude(), restaurant.getLongitude()
             );
-            results.add(new RestaurantResponse(restaurant.getName(), restaurant.getLatitude(), restaurant.getLongitude(), distance));
+            results.add(new RestaurantResponseDto(restaurant.getName(), restaurant.getLatitude(), restaurant.getLongitude(), distance));
         }
 
         return results.stream()
-                .sorted(Comparator.comparingDouble(RestaurantResponse::getDistance))
+                .sorted(Comparator.comparingDouble(RestaurantResponseDto::getDistance))
                 .limit(10)
                 .toList();
     }
-}
+}*/
