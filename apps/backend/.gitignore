@@ -6,6 +6,7 @@ build
 bin
 **/build/
 **/bin/
+**/target/
 
 #IDE
 .vscode
