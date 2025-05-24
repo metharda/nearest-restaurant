@@ -1,7 +1,7 @@
 package com.project.middleware;
 
 import java.util.Date;
-import java.util.Map;
+import com.project.datastructures.HashMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import io.jsonwebtoken.Claims;
@@ -59,11 +59,11 @@ public class Jwt {
             if (!signature.equals(expectedSignature)) {
                 throw new IllegalArgumentException();
             }
-            
-            Map<String, Object> map = objectMapper.readValue(payload, new TypeReference<Map<String, Object>>() {});
+            HashMap<String, Object> map = (HashMap<String, Object>) objectMapper.readValue(payload, new TypeReference<HashMap<String, Object>>() {});
             user_id = Integer.parseInt(map.get("sub").toString());
         }
         catch (Exception e) {
+            System.out.println(e);
             return null;
         }
         return String.valueOf(user_id);
