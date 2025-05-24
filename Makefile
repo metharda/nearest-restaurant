@@ -56,5 +56,7 @@ clean:
 	@find . -name ".next" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
 	@find . -name "dist" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
 	@find . -name "build" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+	@find . -name "target" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
 	@find . -name "bin" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
 	@find . -name ".gradle" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+	
