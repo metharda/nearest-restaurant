@@ -2,6 +2,7 @@ package com.project.repository;
 
 import org.springframework.stereotype.Repository;
 import com.project.datastructures.Linkedlist;
+import com.project.datastructures.Node;
 import com.project.dto.request.RestaurantRequestDto;
 import com.project.datastructures.Graph;
 import com.project.entity.Location;
@@ -10,9 +11,18 @@ import com.project.entity.Location;
 public class GraphRepository {
     private Graph graph = null;
 
-    public Linkedlist<Location> fetch_restaurants(RestaurantRequestDto dto) {
+    public Location[] fetch_restaurants(RestaurantRequestDto dto) {
         graph = Graph.getInstance(dto.getRadius(), dto.getLatitude(), dto.getLongitude());
+        Linkedlist<Location> restaurants = graph.getRestaurants();
+        Location[] restaurant_locations = new Location[restaurants.length()];
+        Node<Location> current = restaurants.head;
 
-        return graph.getRestaurants();
+        for(int i = 0; i<restaurants.length(); ++i) {
+            restaurant_locations[i] = current.value;
+
+            current = current.next;
+        }
+        
+        return restaurant_locations;
     }
 }

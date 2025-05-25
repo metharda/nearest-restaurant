@@ -1,13 +1,10 @@
 package com.project.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.dto.request.RestaurantRequestDto;
 import com.project.dto.response.RestaurantResponseDto;
 import com.project.service.GraphService;
-
 import lombok.RequiredArgsConstructor;
-
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -22,17 +19,15 @@ import org.springframework.http.ResponseEntity;
 @RequestMapping("/")
 public class PathController {
     private final GraphService graphService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @GetMapping("/getRestaurants")
     public ResponseEntity<?> getNearestRestaurants(HttpEntity<String> request) {
         RestaurantResponseDto dto_resp;
         try{
-            String body = request.getBody();
-            JsonNode jsonNode = objectMapper.readTree(body);
-            String radius = jsonNode.get("radius").asText();
-            String latitude = jsonNode.get("latitude").asText();
-            String longitude = jsonNode.get("longitude").asText();
+            HttpHeaders headers = request.getHeaders();
+            String radius = headers.get("Radius").getFirst();
+            String latitude = headers.get("Latitude").getFirst();
+            String longitude = headers.get("Longitude").getFirst();
 
             RestaurantRequestDto dto_req = new RestaurantRequestDto(radius, latitude, longitude);
             dto_resp = graphService.getRestaurants(dto_req);
