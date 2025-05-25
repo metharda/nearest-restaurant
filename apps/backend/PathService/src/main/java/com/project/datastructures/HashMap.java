@@ -10,7 +10,7 @@ import java.util.Set;
 import java.lang.Math;
 
 public class HashMap<K, V> implements Map<K, V> {
-    private int size;
+    private int size = 100;
     private Linkedlist<Entry<K, V>> entries;
 
     public HashMap() {

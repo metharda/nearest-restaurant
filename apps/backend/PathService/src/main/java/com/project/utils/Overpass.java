@@ -15,67 +15,20 @@ import com.project.entity.Way;
 public class Overpass {
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static Linkedlist<Way> fetchWays(String radius, String lat, String lon) throws Exception {
+    public static Object[] fetchWaysWithNodes(String radius, String lat, String lon) throws Exception {
         String overpassUrl = "https://overpass-api.de/api/interpreter";
         String query = String.format(
-    "[out:json];way(around:%s,%s,%s)[\"highway\"];out body;>;out skel qt;",
-            radius, lat, lon
-        );
-        String jsonString = null;
-        Linkedlist<Way> ways = new Linkedlist<>();
-
-        @SuppressWarnings("deprecation")
-        URL url = new URL(overpassUrl);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("POST");
-        con.setDoOutput(true);
-
-        try (OutputStream os = con.getOutputStream()) {
-            byte[] input = query.getBytes(StandardCharsets.UTF_8);
-            os.write(input, 0, input.length);
-        }
-
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = in.readLine()) != null) {
-                content.append(line);
-            }
-            jsonString = content.toString();
-        } finally {
-            con.disconnect();
-        }
-
-        JsonNode root = mapper.readTree(jsonString);
-        JsonNode elements = root.get("elements");
-
-        for (JsonNode element : elements) {
-            Long id = element.get("id").asLong();
-            JsonNode nodesNode = element.get("nodes");
-            Long[] nodes = new Long[1];
-
-            if(nodesNode != null) {
-                nodes = new Long[nodesNode.size()];
-                for(int i = 0; i<nodesNode.size() ; ++i) {
-                    nodes[i] = nodesNode.get(i).asLong();
-                }
-            }
-
-            ways.add(new Way(id, nodes));
-        }
-
-        return ways;
-    }
-
-    public static Linkedlist<Location> fetchJunctions(String radius, String lat, String lon) throws Exception {
-        String overpassUrl = "https://overpass-api.de/api/interpreter";
-        String query = String.format(
-            "[out:json];node(around:%s,%s,%s)[\"highway\"];out body;",
+            "[out:json];way(around:%s,%s,%s)[\"highway\"];(._;>;);out body;",
             radius, lat, lon
         );
 
         String jsonString;
-        Linkedlist<Location> junctions = new Linkedlist<>();
+        Linkedlist<Way> ways = new Linkedlist<>();
+        Linkedlist<Location> nodes = new Linkedlist<>();
+        Object[] result = new Object[2];
+
+        result[0] = ways;
+        result[1] = nodes;
 
         @SuppressWarnings("deprecation")
         URL url = new URL(overpassUrl);
@@ -103,21 +56,33 @@ public class Overpass {
         JsonNode elements = root.get("elements");
 
         for (JsonNode element : elements) {
-            Long id = element.get("id").asLong();
-            JsonNode nameNode = element.get("tags").get("name");
-            String name = "Junction";
+            String type = element.get("type").asText();
 
-            if (nameNode != null) {
-                name = nameNode.asText();
+            if (type.equals("way")) {
+                Long id = element.get("id").asLong();
+                JsonNode nodesNode = element.get("nodes");
+                Long[] nodeIds = new Long[nodesNode.size()];
+
+                for (int i = 0; i < nodesNode.size(); i++) {
+                    nodeIds[i] = nodesNode.get(i).asLong();
+                }
+
+                ways.add(new Way(id, nodeIds));
             }
 
-            double latNode = element.get("lat").asDouble();
-            double lonNode = element.get("lon").asDouble();
+            if (type.equals("node")) {
+                Long id = element.get("id").asLong();
+                double latNode = element.get("lat").asDouble();
+                double lonNode = element.get("lon").asDouble();
 
-            junctions.add(new Location(id, name, latNode, lonNode));
+                JsonNode nameNode = element.get("tags") != null ? element.get("tags").get("name") : null;
+                String name = nameNode != null ? nameNode.asText() : "Node";
+
+                nodes.add(new Location(id, name, latNode, lonNode));
+            }
         }
 
-        return junctions;
+        return result;
     }
 
     public static Linkedlist<Location> fetchRestaurants(String radius, String lat, String lon) throws Exception {
@@ -126,8 +91,6 @@ public class Overpass {
             "[out:json];node(around:%s,%s,%s)[\"amenity\"=\"restaurant\"];out body;",
             radius, lat, lon
         );
-
-        System.out.println(query);
 
         String jsonString;
         Linkedlist<Location> restaurants = new Linkedlist<>();
