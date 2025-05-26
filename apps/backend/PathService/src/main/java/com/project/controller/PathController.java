@@ -1,8 +1,10 @@
 package com.project.controller;
 
+import com.project.dto.request.PathRequestDto;
 import com.project.dto.request.RestaurantRequestDto;
 import com.project.dto.response.RestaurantResponseDto;
 import com.project.service.GraphService;
+import com.project.service.QueueClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpEntity;
@@ -19,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 @RequestMapping("/")
 public class PathController {
     private final GraphService graphService;
+    private final QueueClientService queueClientService;
 
     @GetMapping("/getRestaurants")
     public ResponseEntity<?> getNearestRestaurants(HttpEntity<String> request) {
@@ -31,6 +34,9 @@ public class PathController {
 
             RestaurantRequestDto dto_req = new RestaurantRequestDto(radius, latitude, longitude);
             dto_resp = graphService.getRestaurants(dto_req);
+            
+            // Queue the restaurant request
+            queueClientService.enqueueMessage(dto_req);
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error");
@@ -39,5 +45,24 @@ public class PathController {
             return ResponseEntity.ok(dto_resp);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Null Response");
+    }
+
+    @GetMapping("/getPath")
+    public ResponseEntity<?> getPath(HttpEntity<String> request){
+        try{
+            HttpHeaders headers = request.getHeaders();
+            String restaurantID = headers.get("Restaurant-id").getFirst();
+            String latitude = headers.get("Latitude").getFirst();
+            String longitude = headers.get("Longitude").getFirst();
+            
+            PathRequestDto pathRequestDto = new PathRequestDto(restaurantID, latitude, longitude);
+            
+            queueClientService.enqueueMessage(pathRequestDto);
+            
+            return ResponseEntity.ok("Path request queued successfully");
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error");
+        }
     }
 }

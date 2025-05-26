@@ -7,6 +7,10 @@ public class QueueService {
     static HashMap<String, Queue<String>> Queues = new HashMap<String, Queue<String>>();
     private QueueService() {
     }
+    
+    public static synchronized boolean queueExists(String queueName) {
+        return Queues.containsKey(queueName);
+    }
 
     public static synchronized Queue<String> getQueue(String queueName) {
         if (Queues.containsKey(queueName)) {
