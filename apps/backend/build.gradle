@@ -36,6 +36,12 @@ subprojects{
 			implementation libs.springBootStarterWebsocket
 		}
 	}
+	
+	if (project.name == 'PathService') {
+		dependencies {
+			implementation libs.springBootStarterWebsocket
+		}
+	}
 }
 allprojects {
 	repositories {

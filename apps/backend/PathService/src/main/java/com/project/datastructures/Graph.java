@@ -12,6 +12,7 @@ public class Graph {
     private Linkedlist<Location> nodes;
     private Linkedlist<Way> ways;
     private Linkedlist<Location> restaurants;
+    private Location user_location;
 
     private static Graph instance = null;
 
@@ -61,6 +62,12 @@ public class Graph {
         }
         if (map.get(loc2).count(loc1) < 1) {
             map.get(loc2).add(loc1);
+        }
+    }
+
+    public void removeAllEdges(Location loc1) {
+        if(!map.containsKey(loc1)) {
+            map.remove(loc1);
         }
     }
 
@@ -145,6 +152,13 @@ public class Graph {
         }
 
         return closest;
+    }
+
+    public void implement_user_location_to_graph(Location user_location) {
+        removeAllEdges(user_location);
+        setUser_location(user_location);
+        Location closest = findClosestJunction(user_location, nodes);
+        addEdge(user_location, closest);
     }
 
     private Location findLocationById(Linkedlist<Location> nodes, Long id) {

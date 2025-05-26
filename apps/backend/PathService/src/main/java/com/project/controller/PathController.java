@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.http.ResponseEntity;
+import com.project.entity.Location;
+import com.project.datastructures.Graph;
+
+import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -51,18 +56,33 @@ public class PathController {
     public ResponseEntity<?> getPath(HttpEntity<String> request){
         try{
             HttpHeaders headers = request.getHeaders();
-            String restaurantID = headers.get("Restaurant-id").getFirst();
-            String latitude = headers.get("Latitude").getFirst();
-            String longitude = headers.get("Longitude").getFirst();
+            String restaurantID = headers.get("Restaurant-Id").getFirst();
+            String user_latitude = headers.get("User-Latitude").getFirst();
+            String user_longitude = headers.get("User-Longitude").getFirst();
+
+            Location user_location = new Location(1L, "User", Double.parseDouble(user_latitude), Double.parseDouble(user_longitude));
+            Graph graph = Graph.getInstance();
+            graph.implement_user_location_to_graph(user_location);
             
-            PathRequestDto pathRequestDto = new PathRequestDto(restaurantID, latitude, longitude);
+            // Generate a unique requestId for this path request
+            String requestId = java.util.UUID.randomUUID().toString();
             
+            // Create the path request DTO
+            PathRequestDto pathRequestDto = new PathRequestDto(requestId, restaurantID, user_latitude, user_longitude);
+            
+            // Send to queue service
             queueClientService.enqueueMessage(pathRequestDto);
             
-            return ResponseEntity.ok("Path request queued successfully");
+            // Start polling for results
+            queueClientService.startPollingQueue(requestId);
+            
+            return ResponseEntity.ok(Map.of(
+                "requestId", requestId,
+                "message", "Path request queued successfully. Results will be sent via WebSocket."
+            ));
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error: " + e.getMessage());
         }
     }
 }
