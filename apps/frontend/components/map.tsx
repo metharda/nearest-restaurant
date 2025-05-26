@@ -1,78 +1,139 @@
 'use client';
-import Sidebar from './sidebar';
 
-
+import { useEffect, useRef, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
-import { fetchNearbyRestaurants } from '@/lib/overpass';
+import { fetchRestaurants } from '@/lib/restaurant';
+import { locationIcon, restaurantIcon } from '@/lib/icons';
 
-import { useState, useEffect, useRef } from 'react';
+const radius = 2000;
 
+interface Restaurant {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+}
 
 export default function Map() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const leafletMapRef = useRef<any>(null);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   useEffect(() => {
-    async function loadMap() {
-      const L = await import('leaflet');
+    const initializeMap = async () => {
+      if (!mapRef.current) return;
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
+      try {
+        // Get user location
+        const location = await getCurrentLocation();
+        setUserLocation(location);
 
-          const map = L.map(mapRef.current!).setView([lat, lon], 14);
+        // Fetch restaurants
+        const response = await fetchRestaurants(radius, location.latitude, location.longitude);
+        const restaurantData = response.restaurants || [];
+        
+        // Filter out generic "Restaurant" names
+        const filteredRestaurants = restaurantData.filter(
+          (restaurant: Restaurant) => restaurant.name !== "Restaurant"
+        );
+        setRestaurants(filteredRestaurants);
 
-          const locationIcon = L.icon({
-  iconUrl: '/location.png',
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-});
+        // Initialize Leaflet map
+        const L = (await import('leaflet')).default;
+        
+        // Create map centered on user location
+        const map = L.map(mapRef.current).setView([location.latitude, location.longitude], 15);
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
+        // Add user location marker
+        L.marker([location.latitude, location.longitude], { icon: locationIcon })
+          .addTo(map)
+          .bindPopup('Your Location')
+          .openPopup();
 
-
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-          }).addTo(map);
-
-          L.marker([lat, lon],{ icon: locationIcon })
+        // Add restaurant markers
+        filteredRestaurants.forEach((restaurant: Restaurant) => {
+          L.marker([restaurant.latitude, restaurant.longitude], { icon: restaurantIcon })
             .addTo(map)
-            .bindPopup('Konumunuz')
-            .openPopup();
+            .bindPopup(`
+              <div>
+                <h3 style="margin: 0 0 8px 0; font-weight: bold;">${restaurant.name}</h3>
+                <p style="margin: 0; font-size: 12px; color: #666;">
+                  📍 ${restaurant.latitude.toFixed(6)}, ${restaurant.longitude.toFixed(6)}
+                </p>
+              </div>
+            `);
+        });
 
-          const restaurants = await fetchNearbyRestaurants(lat, lon);
-          restaurants.forEach((place: any) => {
-            if (place.lat && place.lon) {
-              L.marker([place.lat, place.lon],{ icon: restaurants })
-                .addTo(map)
-                .bindPopup(place.tags?.name || 'Restoran');
-            }
-          });
-        },
-        (error) => {
-          alert('Konum alınamadı: ' + error.message);
-        }
-      );
-    }
+        // Store map reference for cleanup
+        leafletMapRef.current = map;
 
-    loadMap();
+      } catch (error) {
+        console.error('Failed to initialize map:', error);
+      }
+    };
+
+    initializeMap();
+
+    // Cleanup function
+    return () => {
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
   }, []);
 
+  const getCurrentLocation = () => {
+    return new Promise<{ latitude: number; longitude: number }>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by this browser'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          resolve({ latitude, longitude });
+        },
+        (error) => {
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              reject(new Error('Konum erişimi reddedildi'));
+              break;
+            case error.POSITION_UNAVAILABLE:
+              reject(new Error('Konum bilgisi kullanılamıyor'));
+              break;
+            case error.TIMEOUT:
+              reject(new Error('Konum alma işlemi zaman aşımına uğradı'));
+              break;
+            default:
+              reject(new Error('Bilinmeyen bir hata oluştu'));
+              break;
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    });
+  };
+
   return (
-  <>
-    <Sidebar restaurants={restaurants} />
     <div
       ref={mapRef}
       style={{
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
+        position: 'fixed',
+        inset: 0,
         zIndex: 0,
       }}
     />
-  </>
-);
-
+  );
 }
