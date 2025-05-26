@@ -3,6 +3,16 @@
 
 [versions]
 junit-jupiter = "5.12.1"
+springBoot = "3.4.6"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+springBootStarterWebsocket = { module = "org.springframework.boot:spring-boot-starter-websocket", version.ref = "springBoot" }
+springBootStarterWeb = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "springBoot" }
+jacksoncore = "com.fasterxml.jackson.core:jackson-core:2.16.1"
+jwt_api = "io.jsonwebtoken:jjwt-api:0.12.5"
+jwt_impl = "io.jsonwebtoken:jjwt-impl:0.12.5"
+dotenv = "io.github.cdimascio:dotenv-java:3.0.0"
+junitJupiterApi = "org.junit.jupiter:junit-jupiter-api:5.10.2"
+junitJupiterEngine = "org.junit.jupiter:junit-jupiter-engine:5.10.2"
+lombok = "org.projectlombok:lombok:1.18.30"
