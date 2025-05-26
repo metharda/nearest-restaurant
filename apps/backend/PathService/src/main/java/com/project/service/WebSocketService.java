@@ -1,22 +1,24 @@
 package com.project.service;
 
-// import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 public class WebSocketService {
     
-    // Temporary no-args constructor until WebSocket is set up
-    public WebSocketService() {
-        System.out.println("WebSocketService initialized with mock implementation");
+    private final SimpMessagingTemplate messagingTemplate;
+    
+    // Constructor with SimpMessagingTemplate
+    public WebSocketService(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+        System.out.println("WebSocketService initialized with proper implementation");
     }
       
     public void sendMessage(String destination, Object payload) {
         System.out.println("WebSocket: Sending message to destination: " + destination);
         System.out.println("WebSocket: Payload: " + payload);
-        // Temporarily comment out actual WebSocket code until dependencies are resolved
-        // messagingTemplate.convertAndSend(destination, payload);
+        
+        // Send message to the specified destination
+        messagingTemplate.convertAndSend(destination, payload);
     }
-      // NOTE: This is a mock implementation. Before building the project, 
-    // uncomment the SimpMessagingTemplate code and ensure WebSocket dependencies are available
 }

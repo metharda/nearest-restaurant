@@ -16,6 +16,7 @@ public class Graph {
 
     private static Graph instance = null;
 
+    @SuppressWarnings("unchecked")
     private Graph(String radius, String lat, String lon) {
         try {
             Object[] lists = Overpass.fetchWaysWithNodes(radius, lat, lon);
