@@ -62,23 +62,16 @@ public class PathController {
             Graph graph = Graph.getInstance();
             graph.implement_user_location_to_graph(user_location);
             
-            // Generate a unique requestId for this path request
-            String requestId = java.util.UUID.randomUUID().toString();
             
             // Create the path request DTO
-            PathRequestDto pathRequestDto = new PathRequestDto(requestId, restaurantID, user_latitude, user_longitude);
+            PathRequestDto pathRequestDto = new PathRequestDto(restaurantID, user_latitude, user_longitude);
             
             // Send to queue service
             queueClientService.enqueueMessage(pathRequestDto);
             
-            // Start polling for results
-            queueClientService.startPollingQueue(requestId);
-            
-            HashMap<String, Object> responseMap = new HashMap<>();
-            responseMap.put("requestId", requestId);
-            responseMap.put("message", "Path request queued successfully. Results will be sent via WebSocket.");
-            
-            return ResponseEntity.ok(responseMap);
+            return ResponseEntity.ok(
+                " Path request queued successfully. Results will be sent via WebSocket."
+            );
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error: " + e.getMessage());

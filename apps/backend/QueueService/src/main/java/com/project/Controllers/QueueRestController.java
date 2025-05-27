@@ -51,11 +51,19 @@ public class QueueRestController {
             @RequestHeader("QueueName") String queueName) {
         
         try {
+            // First check if queue exists
+            if (!QueueService.queueExists(queueName)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Queue '" + queueName + "' doesn't exist.");
+            }
+
             String data = QueueService.dequeue(queueName);
             if (data != null) {
                 return ResponseEntity.ok(data);
             } else {
-                return ResponseEntity.ok("Queue '" + queueName + "' is empty or doesn't exist.");
+                // Queue exists but is empty
+                return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                        .body("Queue '" + queueName + "' is empty.");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
