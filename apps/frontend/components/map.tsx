@@ -21,7 +21,7 @@ export default function Map() {
   const leafletMapRef = useRef<any>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const { setSelectedId } = useInfoCard(); // Use context to trigger InfoCard
+  const { setSelectedId, focusRestaurant } = useInfoCard(); // Use context to trigger InfoCard
 
   useEffect(() => {
     const initializeMap = async () => {
@@ -30,33 +30,25 @@ export default function Map() {
       try {
         const location = await getCurrentLocation();
         setUserLocation(location);
-
         const response = await fetchRestaurants(radius, location.latitude, location.longitude);
         const restaurantData = response.restaurants || [];
-
         const filteredRestaurants = restaurantData.filter(
           (restaurant: Restaurant) => restaurant.name !== 'Restaurant'
         );
         setRestaurants(filteredRestaurants);
-
         const L = (await import('leaflet')).default;
-
         const map = L.map(mapRef.current, { zoomControl: false }).setView(
           [location.latitude, location.longitude],
           15
         );
-
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenStreetMap contributors',
         }).addTo(map);
-
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-
         L.marker([location.latitude, location.longitude], { icon: locationIcon })
           .addTo(map)
-          .bindPopup('Your Location')
+          .bindPopup('Konumunuz')
           .openPopup();
-
         filteredRestaurants.forEach((restaurant: Restaurant) => {
           const marker = L.marker([restaurant.latitude, restaurant.longitude], {
             icon: restaurantIcon,
@@ -70,20 +62,16 @@ export default function Map() {
                 </p>
               </div>
             `);
-
           marker.on('click', () => {
-            setSelectedId(restaurant.id); // Trigger InfoCard
+            setSelectedId(restaurant.id);
           });
         });
-
         leafletMapRef.current = map;
       } catch (error) {
         console.error('Failed to initialize map:', error);
       }
     };
-
     initializeMap();
-
     return () => {
       if (leafletMapRef.current) {
         leafletMapRef.current.remove();
@@ -91,6 +79,17 @@ export default function Map() {
       }
     };
   }, [setSelectedId]);
+
+  useEffect(() => {
+  if (focusRestaurant && leafletMapRef.current) {
+    leafletMapRef.current.setView(
+      [focusRestaurant.latitude, focusRestaurant.longitude],
+      17,
+      { animate: true }
+    );
+    setSelectedId(focusRestaurant.id);
+  }
+}, [focusRestaurant, setSelectedId]);
 
   return (
     <div

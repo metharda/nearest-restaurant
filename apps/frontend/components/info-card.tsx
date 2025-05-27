@@ -15,8 +15,7 @@ import { cn } from "@/lib/utils"
 import { getRestaurantInfo } from "@/lib/overpass"
 import { useEffect, useState } from "react"
 import { getPathtoRestaurant } from "@/lib/restaurant"
-import { getCurrentLocation } from "@/lib/location"
-
+import { calcDistance, getCurrentLocation } from "@/lib/location"
 
 interface InfoCardProps {
   isOpen: boolean
@@ -36,30 +35,43 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
     features: string[]
   }>(null)
   const [pathData, setPathData] = useState<PathResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  
 
   useEffect(() => {
     if (!isOpen) return
-
-    getRestaurantInfo(restaurantId)
-      .then((info) => {
+    
+    const fetchRestaurantData = async () => {
+      try {
+        setLoading(true)
+        const info = await getRestaurantInfo(restaurantId)
+        const distance = await calcDistance(
+          info.location.lat,
+          info.location.lon
+        )
+        
         setData({
           name: info.name || "Unnamed",
           type: info.tags?.cuisine || "Restaurant",
-          location: `${info.adress?.street || "Unknown Street"}, ${info.adress?.district || "Unknown District"}, ${info.adress?.city || "Unknown City"}`,
-          rating: parseFloat(info.stars) || 0,
-          reviews: Math.floor(Math.random() * 500 + 20), // Simulate reviews
+          location: `${distance.toFixed(5)} km uzaklıkta`,
+          rating: parseFloat((Math.random() * 2 + 3).toFixed(1)),
+          reviews: Math.floor(Math.random() * 500 + 20),
           hours: info.openingHours || "Unknown hours",
           description: info.description || "No description available.",
           features: Object.keys(info.tags || {}),
         })
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Failed to fetch restaurant info:", error)
-      })
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchRestaurantData()
   }, [isOpen, restaurantId])
 
   if (!data) return null
-
   let onGetPathClick = async () => {
     try {
       const userLocation = await getCurrentLocation();
@@ -85,65 +97,77 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
       )}
     >
       <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">{data.name}</CardTitle>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">{data.type}</Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={onClose}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+        {loading ? (
+          <CardContent className="p-6">
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
+              <div className="h-20 bg-gray-200 rounded animate-pulse" />
             </div>
-          </div>
-          <CardDescription className="flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            {data.location}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium">{data.rating}</span>
-            <span className="text-sm text-muted-foreground">
-              ({data.reviews.toLocaleString()} reviews)
-            </span>
-          </div>
+          </CardContent>
+        ) : data && (
+          <>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">{data.name}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{data.type}</Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={onClose}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <CardDescription className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {data.location}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span className="text-sm font-medium">{data.rating}</span>
+                <span className="text-sm text-muted-foreground">
+                  ({data.reviews.toLocaleString()} reviews)
+                </span>
+              </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>{data.hours}</span>
-          </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>{data.hours}</span>
+              </div>
 
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Description</h4>
-            <p className="text-sm text-muted-foreground">{data.description}</p>
-          </div>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Description</h4>
+                <p className="text-sm text-muted-foreground">{data.description}</p>
+              </div>
 
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Features</h4>
-            <div className="flex flex-wrap gap-1">
-              {data.features.map((feature) => (
-                <Badge key={feature} variant="outline" className="text-xs">
-                  {feature}
-                </Badge>
-              ))}
-            </div>
-            <div>
-              <Button
-                variant="default"
-                className="w-full mt-2"
-                onClick={onGetPathClick}
-              >
-                Yol Tarifi Al
-              </Button>
-            </div>
-          </div>
-        </CardContent>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Features</h4>
+                <div className="flex flex-wrap gap-1">
+                  {data.features.map((feature) => (
+                    <Badge key={feature} variant="outline" className="text-xs">
+                      {feature}
+                    </Badge>
+                  ))}
+                </div>
+                <div>
+                  <Button
+                    variant="default"
+                    className="w-full mt-2"
+                    onClick={onGetPathClick}
+                  >
+                    Yol Tarifi Al
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </>
+        )}
       </Card>
     </div>
   )
