@@ -1,8 +1,9 @@
 'use client'
-import { Calendar, Home, Inbox, Search, Settings, ChefHat, MapPin, Star, MapPinIcon } from "lucide-react"
+import { ChefHat, MapPin, MapPinIcon } from "lucide-react"
 import { fetchRestaurants } from "@/lib/restaurant"
+import { getCurrentLocation } from "@/lib/location"
 import { useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sidebar,
   SidebarContent,
@@ -10,10 +11,8 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Skeleton } from "@/components/ui/skeleton"
 
 const radius = 2000
 
@@ -29,7 +28,6 @@ interface SidebarAppProps {
 }
 
 export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
-
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [locationError, setLocationError] = useState<string | null>(null)
@@ -43,7 +41,6 @@ export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
           latitude,
           longitude
         )
-        // Extract restaurants array from the response
         setRestaurants(response.restaurants || [])
         setLocationError(null)
       } catch (error) {
@@ -56,43 +53,6 @@ export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
     loadRestaurants()
   }, [])
 
-const getCurrentLocation = () => {
-    return new Promise<{ latitude: number; longitude: number }>((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject(new Error('Geolocation is not supported by this browser'))
-            return
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords
-                resolve({ latitude, longitude })
-            },
-            (error) => {
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        reject(new Error('Konum erişimi reddedildi'))
-                        break
-                    case error.POSITION_UNAVAILABLE:
-                        reject(new Error('Konum bilgisi kullanılamıyor'))
-                        break
-                    case error.TIMEOUT:
-                        reject(new Error('Konum alma işlemi zaman aşımına uğradı'))
-                        break
-                    default:
-                        reject(new Error('Bilinmeyen bir hata oluştu'))
-                        break
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 300000 // 5 minutes
-            }
-        )
-    })
-}
-
   // Filter out generic "Restaurant" names and create menu items
   const restaurantItems = restaurants
     .filter((restaurant) => restaurant.name !== "Restaurant")
@@ -101,7 +61,7 @@ const getCurrentLocation = () => {
       icon: ChefHat,
       id: restaurant.id,
       coordinates: `${restaurant.latitude.toFixed(6)}, ${restaurant.longitude.toFixed(6)}`,
-      restaurant: restaurant // Store full restaurant object for click handler
+      restaurant: restaurant
     }))
 
   const handleRestaurantClick = (restaurant: Restaurant) => {
@@ -111,25 +71,25 @@ const getCurrentLocation = () => {
   }
 
   return (
-    <Sidebar>
+    <Sidebar variant="floating" className="w-80">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-2">
-            <ChefHat className="h-4 w-4" />
+          <SidebarGroupLabel className="flex items-center gap-2 text-lg font-semibold">
             Restorantlar ({restaurantItems.length})
           </SidebarGroupLabel>
+          <div className="h-px bg-gray-200 my-2" />
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
               {loading ? (
                 <>
                   {[...Array(3)].map((_, index) => (
                     <SidebarMenuItem key={index}>
-                      <div className="p-3 rounded-lg border border-black bg-white">
-                        <div className="flex items-start gap-3">
-                          <Skeleton className="h-5 w-5 mt-0.5" />
+                      <div className="p-2 rounded-md border border-gray-200 bg-white shadow-sm">
+                        <div className="flex items-start gap-2">
+                          <Skeleton className="h-4 w-4 mt-0.5 rounded-full" />
                           <div className="min-w-0 flex-1">
-                            <Skeleton className="h-5 w-3/4 mb-2" />
-                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4 mb-1 rounded" />
+                            <Skeleton className="h-3 w-full rounded" />
                           </div>
                         </div>
                       </div>
@@ -138,28 +98,33 @@ const getCurrentLocation = () => {
                 </>
               ) : locationError ? (
                 <SidebarMenuItem>
-                  <div className="flex items-center gap-2 px-2 py-1.5 text-sm text-red-600">
-                    <MapPinIcon className="h-4 w-4" />
+                  <div className="flex items-center gap-2 p-2 rounded-md border border-red-200 bg-red-50 text-red-700">
+                    <MapPinIcon className="h-4 w-4 shrink-0" />
                     <div>
-                      <div className="font-medium">Konum Hatası</div>
-                      <div className="text-xs">{locationError}</div>
+                      <div className="font-medium text-sm">Konum Hatası</div>
+                      <div className="text-xs text-red-600">{locationError}</div>
                     </div>
                   </div>
                 </SidebarMenuItem>
               ) : restaurantItems.length > 0 ? (
                 restaurantItems.map((item) => (
                   <SidebarMenuItem key={item.id}>
-                    <div 
-                      className="p-3 rounded-lg border border-black bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                    <div
+                      className="p-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all duration-200 cursor-pointer group"
                       onClick={() => handleRestaurantClick(item.restaurant)}
                     >
-                      <div className="flex items-start gap-3">
-                        <item.icon className="h-5 w-5 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2">
+                        <div className="p-1 rounded-full bg-orange-100 group-hover:bg-orange-200 transition-colors duration-200">
+                          <item.icon className="h-4 w-4 text-orange-600" />
+                        </div>
                         <div className="min-w-0 flex-1">
-                          <div className="font-semibold text-base text-gray-900">{item.title}</div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            📍 {item.coordinates}
+                          <div className="font-medium text-sm text-gray-900 mb-0.5 group-hover:text-gray-800 transition-colors duration-200">
+                            {item.title}
                           </div>
+                            <div className="text-xs text-gray-500 flex items-center gap-1">
+                            <span>📍</span>
+                            {item.coordinates}
+                            </div>
                         </div>
                       </div>
                     </div>
@@ -167,16 +132,18 @@ const getCurrentLocation = () => {
                 ))
               ) : (
                 <SidebarMenuItem>
-                  <div className="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 p-2 rounded-md border border-gray-200 bg-gray-50 text-gray-600">
                     <MapPin className="h-4 w-4" />
-                    {radius/1000}km çevresinde restoran bulunamadı
+                    <span className="text-sm">
+                      {radius/1000}km çevresinde restoran bulunamadı
+                    </span>
                   </div>
                 </SidebarMenuItem>
               )}
             </SidebarMenu>
-          </SidebarGroupContent>
+    </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-    </Sidebar>
-  )
-}
+        </Sidebar>
+      )
+    }

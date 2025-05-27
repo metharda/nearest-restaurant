@@ -1,4 +1,5 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+const login_base_url = 'http://localhost:8080'
+const path_base_url ='http://localhost:8081'
 
 export async function MakeRequest(
   url: string,
@@ -11,7 +12,8 @@ export async function MakeRequest(
       'Content-Type': 'application/json',
       ...extraHeaders,
     }
-
+    console.log(url)
+    const baseUrl = url.startsWith('/login') || url.startsWith('/register') || url.startsWith('/user') ? login_base_url : path_base_url;
     url = `${baseUrl}${url}`
 
     const response = await fetch(url, {
@@ -39,14 +41,17 @@ export async function MakeAuthenticatedRequest(
   extraHeaders: Record<string, string> = {}
 ) {
   try {
-    const accessToken = localStorage.getItem('accessToken')
+    const accessToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('authToken='))
+      ?.split('=')[1]
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
       ...extraHeaders,
     }
-
+    const baseUrl = url.startsWith('/login') || url.startsWith('/register') || url.startsWith('/user') ? login_base_url : path_base_url;
     url = `${baseUrl}${url}`
 
     const response = await fetch(url, {

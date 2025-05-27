@@ -17,16 +17,20 @@ export async function fetchRestaurants(radius: number, lat: number, lon: number)
   }
   return response;
 }
-export async function routeRestaurant(restaurantId: string) {
- const response = await MakeRequest(
-   `/api/restaurant/${restaurantId}`,
-   'GET',
-   null,
-   {}
- );
- 
- if (response instanceof Error) {
-   throw new Error(`Route restaurant failed: ${response.message}`);
- }
- return response;
+export async function getPathtoRestaurant(restaurantId: string, lat: number, lon: number) {
+  const response = await MakeRequest(
+    '/getPath',
+    'GET',
+    null,
+    {
+      'restaurantId': restaurantId,
+      'latitude': lat.toString(),
+      'longitude': lon.toString()
+    }
+  );
+  
+  if (response instanceof Error) {
+    throw new Error(`Get path to restaurant failed: ${response.message}`);
+  }
+  return response;
 }
