@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>STOMP WebSocket Test</title>
+    <!-- SockJS and STOMP client libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stomp-websocket@2.3.4-next/lib/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        #messages {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .message.error { color: red; }
+        .message.success { color: green; }
+        .message.info { color: blue; }
+        button {
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        button:hover { background-color: #45a049; }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .endpoint-btn {
+            background-color: #2196F3;
+        }
+        .endpoint-btn:hover {
+            background-color: #0b7dda;
+        }
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        #status {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>STOMP WebSocket Test - Port 8081</h1>
+    
+    <div class="section">
+        <h3>1. Connection</h3>
+        <div id="status">Status: Disconnected</div>
+        <div>
+            <input type="text" id="endpointInput" value="http://localhost:8081/ws" style="width: 300px;" placeholder="SockJS Endpoint">
+            <button id="connect">Connect</button>
+            <button id="disconnect" disabled>Disconnect</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>2. Subscribe to Topics</h3>
+        <div>
+            <input type="text" id="topicInput" value="/topic/paths" style="width: 300px;" placeholder="Topic to subscribe">
+            <button id="subscribeErrors" disabled>Subscribe to Errors</button>
+            <button id="subscribe" disabled>Subscribe</button>
+            <button id="unsubscribe" disabled>Unsubscribe</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>3. Send Messages</h3>
+        <div>
+            <input type="text" id="destinationInput" value="/app/message" style="width: 300px;" placeholder="Destination">
+            <input type="text" id="messageInput" placeholder="Message to send" style="width: 300px;" disabled>
+            <button id="send" disabled>Send</button>
+        </div>
+    </div>
+
+    <h3>Log:</h3>
+    <div id="messages"></div>
+
+    <script>
+        // Variables
+        let stompClient = null;
+        let subscription = null;
+        let errorSubscription = null;
+        const connectBtn = document.getElementById('connect');
+        const disconnectBtn = document.getElementById('disconnect');
+        const subscribeBtn = document.getElementById('subscribe');
+        const subscribeErrorsBtn = document.getElementById('subscribeErrors');
+        const unsubscribeBtn = document.getElementById('unsubscribe');
+        const sendBtn = document.getElementById('send');
+        const messageInput = document.getElementById('messageInput');
+        const topicInput = document.getElementById('topicInput');
+        const destinationInput = document.getElementById('destinationInput');
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+
+        // Functions
+        function addMessage(text, type) {
+            const message = document.createElement('div');
+            message.classList.add('message');
+            if (type) message.classList.add(type);
+            message.textContent = new Date().toLocaleTimeString() + " - " + text;
+            messagesDiv.appendChild(message);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function setStatus(text, connected) {
+            statusDiv.textContent = "Status: " + text;
+            statusDiv.style.color = connected ? 'green' : 'red';
+            
+            // Connection buttons
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+            
+            // Subscribe/send buttons
+            subscribeBtn.disabled = !connected;
+            subscribeErrorsBtn.disabled = !connected;
+            messageInput.disabled = !connected;
+            sendBtn.disabled = !connected;
+            
+            if (!connected) {
+                unsubscribeBtn.disabled = true;
+            }
+        }
+
+        function connect() {
+            try {
+                const endpoint = document.getElementById('endpointInput').value || "http://localhost:8081/ws";
+                addMessage(`Connecting to ${endpoint} using SockJS...`, "info");
+
+                // Create SockJS connection
+                const socket = new SockJS(endpoint);
+                
+                // Debug logging for SockJS
+                addMessage("SockJS initialized, connecting...", "info");
+                
+                // Create STOMP client over SockJS
+                stompClient = Stomp.over(socket);
+                
+                // Reduce STOMP debug logs in console
+                stompClient.debug = function(str) {
+                    if (str.startsWith(">>> CONNECT") || str.startsWith("<<< CONNECTED")) {
+                        addMessage("STOMP protocol: " + str.slice(0, 30) + "...", "info");
+                    }
+                    console.log("STOMP: ", str);
+                };
+
+                // Connect to the server
+                stompClient.connect(
+                    {}, // No headers for now
+                    function(frame) { // Success callback
+                        addMessage(`STOMP connection established!`, "success");
+                        addMessage(`Connected to: ${frame.headers['server'] || 'Unknown server'}`, "success");
+                        setStatus("Connected", true);
+                    },
+                    function(error) { // Error callback
+                        addMessage(`STOMP connection error: ${error}`, "error");
+                        console.error("STOMP error:", error);
+                        
+                        // Additional guidance
+                        addMessage("Common STOMP WebSocket issues:", "info");
+                        addMessage("1. CORS policy - Server must allow connections from this origin", "info");
+                        addMessage("2. Wrong endpoint - Verify the WebSocket path is correct", "info");
+                        addMessage("3. Server not configured for STOMP WebSockets", "info");
+                        
+                        setStatus("Connection Failed", false);
+                    }
+                );
+            } catch (error) {
+                addMessage(`Error creating STOMP client: ${error.message}`, "error");
+                console.error("STOMP client creation error:", error);
+                setStatus("Connection Failed", false);
+            }
+        }
+
+        function disconnect() {
+            if (stompClient) {
+                if (subscription) {
+                    subscription.unsubscribe();
+                    subscription = null;
+                    addMessage("Unsubscribed from topic", "info");
+                    unsubscribeBtn.disabled = true;
+                }
+                
+                if (errorSubscription) {
+                    errorSubscription.unsubscribe();
+                    errorSubscription = null;
+                    addMessage("Unsubscribed from error topic", "info");
+                }
+                
+                addMessage("Disconnecting from STOMP server...", "info");
+                
+                stompClient.disconnect(function() {
+                    addMessage("Disconnected from STOMP server", "info");
+                    setStatus("Disconnected", false);
+                });
+                
+                stompClient = null;
+            }
+        }
+        
+        function subscribeToTopic() {
+            if (stompClient && stompClient.connected) {
+                const topic = topicInput.value;
+                if (topic) {
+                    if (subscription) {
+                        subscription.unsubscribe();
+                        addMessage(`Unsubscribed from previous topic`, "info");
+                    }
+                    
+                    // Subscribe to the specified topic
+                    addMessage(`Subscribing to: ${topic}`, "info");
+                    
+                    subscription = stompClient.subscribe(topic, function(response) {
+                        // Handle incoming message
+                        try {
+                            const message = JSON.parse(response.body);
+                            addMessage(`Received from ${topic}: ${JSON.stringify(message)}`, "success");
+                        } catch (e) {
+                            addMessage(`Received from ${topic}: ${response.body}`, "success");
+                        }
+                    });
+                    
+                    addMessage(`Subscribed to topic: ${topic}`, "success");
+                    unsubscribeBtn.disabled = false;
+                } else {
+                    addMessage("Please specify a topic to subscribe to", "error");
+                }
+            } else {
+                addMessage("STOMP not connected", "error");
+            }
+        }
+        
+        function unsubscribeFromTopic() {
+            if (subscription) {
+                subscription.unsubscribe();
+                addMessage(`Unsubscribed from topic`, "info");
+                subscription = null;
+                unsubscribeBtn.disabled = true;
+            } else {
+                addMessage("Not subscribed to any topic", "error");
+            }
+        }
+
+        function sendMessage() {
+            if (stompClient && stompClient.connected) {
+                const destination = destinationInput.value;
+                const message = messageInput.value;
+                
+                if (destination && message) {
+                    // Send message to the specified destination
+                    addMessage(`Sending message to ${destination}: ${message}`, "info");
+                    
+                    stompClient.send(destination, {}, JSON.stringify({
+                        text: message,
+                        timestamp: new Date().getTime()
+                    }));
+                    
+                    addMessage(`Sent message to ${destination}`, "success");
+                    messageInput.value = '';
+                } else {
+                    addMessage("Please specify both destination and message", "error");
+                }
+            } else {
+                addMessage("STOMP not connected", "error");
+            }
+        }
+
+        function subscribeToErrors() {
+            if (stompClient && stompClient.connected) {
+                if (errorSubscription) {
+                    errorSubscription.unsubscribe();
+                    addMessage(`Unsubscribed from error topic`, "info");
+                }
+                
+                // Subscribe to the error topic
+                addMessage(`Subscribing to: /topic/errors`, "info");
+                
+                errorSubscription = stompClient.subscribe('/topic/errors', function(response) {
+                    try {
+                        const message = JSON.parse(response.body);
+                        addMessage(`Error from server: ${message.error}`, "error");
+                    } catch (e) {
+                        addMessage(`Error from server: ${response.body}`, "error");
+                    }
+                });
+                
+                addMessage(`Subscribed to error topic`, "success");
+            } else {
+                addMessage("STOMP not connected", "error");
+            }
+        }
+
+        // Event Listeners
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+        subscribeBtn.addEventListener('click', subscribeToTopic);
+        subscribeErrorsBtn.addEventListener('click', subscribeToErrors);
+        unsubscribeBtn.addEventListener('click', unsubscribeFromTopic);
+        sendBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                sendMessage();
+            }
+        });
+
+        // Add initial message
+        addMessage("STOMP WebSocket test page loaded", "info");
+        addMessage("1. Connect to the server using the Connect button", "info");
+        addMessage("2. Subscribe to a topic to receive messages", "info");
+        addMessage("3. Send messages to a destination", "info");
+    </script>
+</body>
+</html>

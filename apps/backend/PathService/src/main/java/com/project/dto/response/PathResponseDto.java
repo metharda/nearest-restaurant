@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PathResponseDto {
-    private String requestId;
     private String restaurantId;
     private List<PathPointDto> path;
     private String status;

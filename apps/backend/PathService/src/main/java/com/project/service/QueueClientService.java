@@ -10,7 +10,6 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.Map;
 
 @Service
 public class QueueClientService {
@@ -19,67 +18,13 @@ public class QueueClientService {
     private static final String QUEUE_NAME = "path-requests";
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final WebSocketService webSocketService;
     
 
-    public QueueClientService(WebSocketService webSocketService) {
+    public QueueClientService() {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
-        this.webSocketService = webSocketService;
         
         // Create queue if it doesn't exist (we'll handle this with the first request)
-    }
-
-    // This method is kept for backward compatibility but doesn't do anything now
-    public void registerRequest(String requestId) {
-        // We no longer need to store session IDs as we're broadcasting to a general topic
-        System.out.println("Path request registered with ID: " + requestId);
-    }
-    
-    /**
-     * Starts polling the queue for a specific request result
-     * @param requestId The unique ID of the request to poll for
-     */
-    public void startPollingQueue(String requestId) {
-        Thread pollingThread = new Thread(() -> {
-            boolean received = false;
-            try {
-                while (!received) {
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.set("Content-Type", "application/json");
-                    headers.set("QueueName", QUEUE_NAME);
-                    headers.set("RequestId", requestId);
-                    
-                    HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-                    
-                    ResponseEntity<String> response = restTemplate.exchange(
-                        QUEUE_SERVICE_URL + "/status", 
-                        HttpMethod.GET, 
-                        requestEntity, 
-                        String.class
-                    );
-                    
-                    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null && !response.getBody().isEmpty()) {
-                        received = true;
-                        // Send to general path topic
-                        webSocketService.sendMessage("/topic/paths", response.getBody());
-                    }
-
-                    // Wait before polling again to avoid overwhelming the queue service
-                    Thread.sleep(1000);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (Exception e) {
-                // Handle exceptions
-                webSocketService.sendMessage("/topic/errors", 
-                        Map.of("requestId", requestId, "error", e.getMessage()));
-            }
-        });
-        
-        // Set as daemon thread so it doesn't prevent application shutdown
-        pollingThread.setDaemon(true);
-        pollingThread.start();
     }
 
     /**

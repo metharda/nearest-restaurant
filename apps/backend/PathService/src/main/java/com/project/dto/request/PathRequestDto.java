@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PathRequestDto {
-    String requestId;
-    String restaurant_id;
-    String user_latitude;
-    String user_longitude;
+    String restaurantId;
+    String latitude;
+    String longitude;
 }
