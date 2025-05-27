@@ -84,7 +84,7 @@ public class QueueListenerService {
                         } catch (Exception e) {
                             // Log error and continue polling
                             System.err.println("Error polling queue: " + e.getMessage());
-                            webSocketService.sendMessage(ERROR_TOPIC, Map.of("error", "Queue polling error: " + e.getMessage()));
+                            webSocketService.sendMessage(ERROR_TOPIC, "Queue polling error: " + e.getMessage());
                             // Wait a bit longer after an error
                             Thread.sleep(2000);
                         }
