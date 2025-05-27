@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.http.ResponseEntity;
 import com.project.entity.Location;
 import com.project.datastructures.Graph;
-import java.util.Map;
+import com.project.datastructures.HashMap;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
@@ -69,9 +69,9 @@ public class PathController {
             // Send to queue service
             queueClientService.enqueueMessage(pathRequestDto);
             
-            return ResponseEntity.ok(Map.of(
-                "message", "Path request queued successfully. Results will be sent via WebSocket."
-            ));
+            return ResponseEntity.ok(
+                " Path request queued successfully. Results will be sent via WebSocket."
+            );
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Error: " + e.getMessage());

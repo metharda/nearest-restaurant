@@ -4,10 +4,8 @@ import com.project.service.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.project.datastructures.HashMap;
+import com.project.datastructures.Linkedlist;
 
 @RestController
 @RequestMapping("/test")
@@ -22,59 +20,84 @@ public class WebSocketTestController {
 
     @GetMapping("/send-test-message")
     public ResponseEntity<?> sendTestMessage(
-            @RequestParam String sessionId,
-            @RequestParam(defaultValue = "Test message from server") String message) {
+            @RequestParam String sessionId,            @RequestParam(defaultValue = "Test message from server") String message) {
         
         // Send it via WebSocket
-        Map<String, Object> payload = Map.of(
-            "message", message,
-            "timestamp", System.currentTimeMillis(),
-            "type", "TEST_MESSAGE"
-        );
+        HashMap<String, Object> payload = new HashMap<>();
+        payload.put("message", message);
+        payload.put("timestamp", System.currentTimeMillis());
+        payload.put("type", "TEST_MESSAGE");
         
         webSocketService.sendMessage("/topic/paths/" + sessionId, payload);
         
-        return ResponseEntity.ok(Map.of(
-            "status", "success",
-            "message", "Test message sent to session: " + sessionId
-        ));
+        HashMap<String, Object> responseMap = new HashMap<>();
+        responseMap.put("status", "success");
+        responseMap.put("message", "Test message sent to session: " + sessionId);
+        
+        return ResponseEntity.ok(responseMap);
     }
     
-    @GetMapping("/send-test-path")
-    public ResponseEntity<?> sendTestPath(@RequestParam String sessionId) {
-        // Create a sample path data as Map
-        Map<String, Object> pathData = createSamplePathData();
+    @GetMapping("/send-test-path")    public ResponseEntity<?> sendTestPath(@RequestParam String sessionId) {
+        // Create a sample path data as HashMap
+        HashMap<String, Object> pathData = createSamplePathData();
         
         // Send it via WebSocket
         webSocketService.sendMessage("/topic/paths/" + sessionId, pathData);
         
-        return ResponseEntity.ok(Map.of(
-            "status", "success",
-            "message", "Test path sent to session: " + sessionId
-        ));
-    }
-    
-    private Map<String, Object> createSamplePathData() {
+        HashMap<String, Object> responseMap = new HashMap<>();
+        responseMap.put("status", "success");
+        responseMap.put("message", "Test path sent to session: " + sessionId);
+        
+        return ResponseEntity.ok(responseMap);
+    }      private HashMap<String, Object> createSamplePathData() {
         // Create sample path points (Istanbul route)
-        List<Map<String, Double>> pathPoints = new ArrayList<>();
+        Linkedlist<HashMap<String, Double>> pathPoints = new Linkedlist<>();
         
         // Add some sample points (Taksim to Sultanahmet)
-        pathPoints.add(Map.of("latitude", 41.0370, "longitude", 28.9850)); // Taksim
-        pathPoints.add(Map.of("latitude", 41.0352, "longitude", 28.9775));
-        pathPoints.add(Map.of("latitude", 41.0314, "longitude", 28.9752));
-        pathPoints.add(Map.of("latitude", 41.0272, "longitude", 28.9744));
-        pathPoints.add(Map.of("latitude", 41.0223, "longitude", 28.9747));
-        pathPoints.add(Map.of("latitude", 41.0159, "longitude", 28.9768));
-        pathPoints.add(Map.of("latitude", 41.0082, "longitude", 28.9784)); // Sultanahmet
+        HashMap<String, Double> point1 = new HashMap<>();
+        point1.put("latitude", 41.0370);
+        point1.put("longitude", 28.9850);
+        pathPoints.add(point1); // Taksim
+        
+        HashMap<String, Double> point2 = new HashMap<>();
+        point2.put("latitude", 41.0352);
+        point2.put("longitude", 28.9775);
+        pathPoints.add(point2);
+        
+        HashMap<String, Double> point3 = new HashMap<>();
+        point3.put("latitude", 41.0314);
+        point3.put("longitude", 28.9752);
+        pathPoints.add(point3);
+        
+        HashMap<String, Double> point4 = new HashMap<>();
+        point4.put("latitude", 41.0272);
+        point4.put("longitude", 28.9744);
+        pathPoints.add(point4);
+        
+        HashMap<String, Double> point5 = new HashMap<>();
+        point5.put("latitude", 41.0223);
+        point5.put("longitude", 28.9747);
+        pathPoints.add(point5);
+        
+        HashMap<String, Double> point6 = new HashMap<>();
+        point6.put("latitude", 41.0159);
+        point6.put("longitude", 28.9768);
+        pathPoints.add(point6);
+        
+        HashMap<String, Double> point7 = new HashMap<>();
+        point7.put("latitude", 41.0082);
+        point7.put("longitude", 28.9784);
+        pathPoints.add(point7); // Sultanahmet
         
         // Create the response object as a map
-        return Map.of(
-            "requestId", "test-request-123",
-            "restaurantId", "123456",
-            "path", pathPoints,
-            "status", "COMPLETED",
-            "distance", 3500.0, // 3.5 km
-            "duration", 2400 // 40 minutes
-        );
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("requestId", "test-request-123");
+        result.put("restaurantId", "123456");
+        result.put("path", pathPoints);
+        result.put("status", "COMPLETED");
+        result.put("distance", 3500.0); // 3.5 km
+        result.put("duration", 2400); // 40 minutes
+        
+        return result;
     }
 }
