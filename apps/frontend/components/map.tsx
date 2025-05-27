@@ -7,6 +7,7 @@ import { locationIcon, restaurantIcon } from '@/lib/icons';
 import { getCurrentLocation } from '@/lib/location';
 import { useInfoCard } from '@/components/info-card-context';
 import { PathResponse } from '@/lib/types';
+import { PathInfoCard } from '@/components/path-card';
 
 const radius = 2000;
 
@@ -23,6 +24,8 @@ export default function Map() {
   const pathLayerRef = useRef<any>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [pathInfoVisible, setPathInfoVisible] = useState(false);
+  const [currentPathInfo, setCurrentPathInfo] = useState<any>(null);
   const { setSelectedId, focusRestaurant } = useInfoCard();
 
   const createBlueDotIcon = (L: any) => {
@@ -39,6 +42,46 @@ export default function Map() {
       iconSize: [14, 14],
       iconAnchor: [7, 7]
     });
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const calculatePathLength = (pathNodes: any[]): { meters: number, kilometers: number, formatted: string } => {
+    let totalDistance = 0;
+    
+    for (let i = 0; i < pathNodes.length - 1; i++) {
+      const current = pathNodes[i];
+      const next = pathNodes[i + 1];
+      const segmentDistance = calculateDistance(
+        current.latitude, 
+        current.longitude, 
+        next.latitude, 
+        next.longitude
+      );
+      totalDistance += segmentDistance;
+    }
+    
+    const meters = Math.round(totalDistance * 1000);
+    const kilometers = totalDistance;
+    
+    let formatted: string;
+    if (meters < 1000) {
+      formatted = `${meters} m`;
+    } else {
+      formatted = `${(kilometers).toFixed(2)} km`;
+    }
+    
+    return { meters, kilometers, formatted };
   };
 
   const visualizePath = async (pathData: PathResponse) => {    
@@ -58,6 +101,19 @@ export default function Map() {
       return;
     }
     
+    const pathLength = calculatePathLength(pathData.path);    
+
+    const destination = pathData.path[pathData.path.length - 1];
+    const pathInfo = {
+      distance: pathLength,
+      destination: {
+        name: destination.name,
+        latitude: destination.latitude,
+        longitude: destination.longitude
+      },
+      nodeCount: pathData.path.length,
+      estimatedTime: ''
+    };
 
     const L = (await import('leaflet')).default;
     
@@ -72,7 +128,6 @@ export default function Map() {
     
 
     if (pathCoordinates.length > 0) {
-      // Create polyline for the path
       const pathLine = L.polyline(pathCoordinates, {
         color: '#4285f4',
         weight: 5,
@@ -91,7 +146,7 @@ export default function Map() {
           pathLayer.addLayer(marker);
           dotsAdded++;
         }
-      }     
+      }      
       const destination = pathData.path[pathData.path.length - 1];
       if (destination) {
         const destMarker = L.marker([destination.latitude, destination.longitude], {
@@ -108,6 +163,9 @@ export default function Map() {
 
       pathLayer.addTo(leafletMapRef.current);
       pathLayerRef.current = pathLayer;
+      setCurrentPathInfo(pathInfo);
+      setPathInfoVisible(true);
+
       const bounds = L.latLngBounds(allCoordinates);
       leafletMapRef.current.fitBounds(bounds, { 
         padding: [30, 30],
@@ -125,6 +183,7 @@ export default function Map() {
       visualizePath(pathData);
     };
     (window as any).mapVisualizationReady = true;    
+
     return () => {      
       delete (window as any).showPathOnMap;
       delete (window as any).handleWebSocketPathData;
@@ -202,13 +261,30 @@ export default function Map() {
   }, [focusRestaurant, setSelectedId]);
 
   return (
-    <div
-      ref={mapRef}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 0,
-      }}
-    />
+    <>
+      <div
+        ref={mapRef}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+        }}
+      />
+      
+      <PathInfoCard 
+        isVisible={pathInfoVisible}
+        onClose={() => {          
+          setPathInfoVisible(false);
+          setCurrentPathInfo(null);
+          
+          // Also remove the path from the map
+          if (pathLayerRef.current && leafletMapRef.current) {            
+            leafletMapRef.current.removeLayer(pathLayerRef.current);
+            pathLayerRef.current = null;
+          }
+        }}
+        pathInfo={currentPathInfo}
+      />
+    </>
   );
 }

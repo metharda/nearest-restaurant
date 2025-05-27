@@ -239,14 +239,14 @@ export function AccountBubble() {
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="font-medium">
             <LogIn className="mr-2 h-4 w-4" />
-            Sign in
+            Giriş Yap
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-80 shadow-lg border bg-white" align="end" style={{backgroundColor: 'white'}} onInteractOutside={(e) => e.preventDefault()}>
           {viewMode === "menu" && (
             <>
               <DropdownMenuLabel className="py-3 px-4 bg-gray-50 border-b" style={{backgroundColor: '#f9fafb'}}>
-                <span className="text-gray-900 font-semibold">Account</span>
+                <span className="text-gray-900 font-semibold">Hesap</span>
               </DropdownMenuLabel>
               <div className="py-2">
                 <DropdownMenuItem 
@@ -255,7 +255,7 @@ export function AccountBubble() {
                   className="mx-2 rounded-md hover:bg-blue-50 focus:bg-blue-50 transition-colors cursor-pointer"
                 >
                   <LogIn className="mr-3 h-4 w-4 text-blue-600" />
-                  <span className="text-gray-700">Login</span>
+                  <span className="text-gray-700">Giriş Yap</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={handleViewModeChange("register")}
@@ -263,7 +263,7 @@ export function AccountBubble() {
                   className="mx-2 rounded-md hover:bg-green-50 focus:bg-green-50 transition-colors cursor-pointer"
                 >
                   <UserPlus className="mr-3 h-4 w-4 text-green-600" />
-                  <span className="text-gray-700">Register</span>
+                  <span className="text-gray-700">Hesap Oluştur</span>
                 </DropdownMenuItem>
               </div>
             </>
@@ -275,19 +275,19 @@ export function AccountBubble() {
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-3">
                   <LogIn className="h-6 w-6 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Welcome Back</h3>
-                <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
+                <h3 className="text-lg font-semibold text-gray-900">Hoşgeldiniz</h3>
+                <p className="text-sm text-gray-500 mt-1">Hesabınıza Giriş Yapın</p>
               </div>
               
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="loginUsername" className="text-sm font-medium text-gray-700">
-                    Username
+                    Kullanıcı Adı
                   </Label>
                   <Input
                     id="loginUsername"
                     type="text"
-                    placeholder="Enter your username"
+                    placeholder="Kullanıcı adınızı girin"
                     value={loginData.username}
                     onChange={(e) => handleLoginInputChange("username", e.target.value)}
                     className="h-11 text-sm border-2 border-gray-200 focus:border-blue-500 focus:ring-0 rounded-lg transition-colors"
@@ -297,12 +297,12 @@ export function AccountBubble() {
 
                 <div className="space-y-2">
                   <Label htmlFor="loginPassword" className="text-sm font-medium text-gray-700">
-                    Password
+                    Şifre
                   </Label>
                   <Input
                     id="loginPassword"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="Şifrenizi girin"
                     value={loginData.password}
                     onChange={(e) => handleLoginInputChange("password", e.target.value)}
                     className="h-11 text-sm border-2 border-gray-200 focus:border-blue-500 focus:ring-0 rounded-lg transition-colors"
@@ -330,7 +330,7 @@ export function AccountBubble() {
                     type="submit" 
                     className="w-full h-11 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-colors"
                   >
-                    Sign In
+                    Giriş Yap
                   </Button>
                   <Button
                     type="button"
@@ -338,20 +338,20 @@ export function AccountBubble() {
                     className="w-full h-11 text-sm border-2 border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
                     onClick={handleBackToMenu}
                   >
-                    Cancel
+                    İptal Et
                   </Button>
                 </div>
               </form>
               
               <div className="mt-6 pt-4 border-t border-gray-200 text-center">
                 <p className="text-sm text-gray-600">
-                  Don't have an account?{" "}
+                  Hesabınız Yok mu?{" "}
                   <button
                     type="button"
                     className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
                     onClick={handleViewModeChange("register")}
                   >
-                    Create one here
+                    Buradan Oluşturun
                   </button>
                 </p>
               </div>
@@ -364,20 +364,20 @@ export function AccountBubble() {
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
                   <UserPlus className="h-6 w-6 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Create Account</h3>
-                <p className="text-sm text-gray-500 mt-1">Join us today</p>
+                <h3 className="text-lg font-semibold text-gray-900">Hesap Oluşturun</h3>
+                <p className="text-sm text-gray-500 mt-1">Bize Katılın</p>
               </div>
               
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                      Username
+                      Kullanıcı Adı
                     </Label>
                     <Input
                       id="username"
                       type="text"
-                      placeholder="Choose username"
+                      placeholder="Kullanıcı adınızı girin"
                       value={registerData.username}
                       onChange={(e) => handleRegisterInputChange("username", e.target.value)}
                       className="h-10 text-sm border-2 border-gray-200 focus:border-green-500 focus:ring-0 rounded-lg transition-colors"
@@ -387,12 +387,12 @@ export function AccountBubble() {
 
                   <div className="space-y-2">
                     <Label htmlFor="registerEmail" className="text-sm font-medium text-gray-700">
-                      Email Address
+                      Email Adresi
                     </Label>
                     <Input
                       id="registerEmail"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder="mailiniz@email.com"
                       value={registerData.email}
                       onChange={(e) => handleRegisterInputChange("email", e.target.value)}
                       className="h-10 text-sm border-2 border-gray-200 focus:border-green-500 focus:ring-0 rounded-lg transition-colors"
@@ -402,12 +402,12 @@ export function AccountBubble() {
 
                   <div className="space-y-2">
                     <Label htmlFor="registerPassword" className="text-sm font-medium text-gray-700">
-                      Password
+                      Şifre
                     </Label>
                     <Input
                       id="registerPassword"
                       type="password"
-                      placeholder="Min. 6 characters"
+                      placeholder="Min. 6 karakter"
                       value={registerData.password}
                       onChange={(e) => handleRegisterInputChange("password", e.target.value)}
                       className="h-10 text-sm border-2 border-gray-200 focus:border-green-500 focus:ring-0 rounded-lg transition-colors"
@@ -417,12 +417,12 @@ export function AccountBubble() {
 
                   <div className="space-y-2">
                     <Label htmlFor="retypePassword" className="text-sm font-medium text-gray-700">
-                      Confirm Password
+                      Şifreyi Tekrar Girin
                     </Label>
                     <Input
                       id="retypePassword"
                       type="password"
-                      placeholder="Repeat password"
+                      placeholder="Şifrenizi tekrar girin"
                       value={registerData.retypePassword}
                       onChange={(e) => handleRegisterInputChange("retypePassword", e.target.value)}
                       className="h-10 text-sm border-2 border-gray-200 focus:border-green-500 focus:ring-0 rounded-lg transition-colors"
@@ -451,7 +451,7 @@ export function AccountBubble() {
                     type="submit" 
                     className="w-full h-11 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition-colors"
                   >
-                    Create Account
+                    Hesap Oluştur
                   </Button>
                   <Button
                     type="button"
@@ -459,20 +459,20 @@ export function AccountBubble() {
                     className="w-full h-11 text-sm border-2 border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
                     onClick={handleBackToMenu}
                   >
-                    Cancel
+                    İptal
                   </Button>
                 </div>
               </form>
               
               <div className="mt-6 pt-4 border-t border-gray-200 text-center">
                 <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
+                  Zaten Hesabınız Var mı?{" "}
                   <button
                     type="button"
                     className="font-medium text-green-600 hover:text-green-500 transition-colors"
                     onClick={handleViewModeChange("login")}
                   >
-                    Sign in here
+                    Buradan Giriş Yapın
                   </button>
                 </p>
               </div>
@@ -512,7 +512,7 @@ export function AccountBubble() {
             className="mx-2 rounded-md hover:bg-red-50 focus:bg-red-50 transition-colors text-red-600"
           >
             <LogOut className="mr-3 h-4 w-4" />
-            <span>Log out</span>
+            <span>Çıkış Yap</span>
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>
