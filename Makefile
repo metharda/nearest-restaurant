@@ -26,7 +26,7 @@ build-auth-service:
 
 path-service:
 	@echo "Path servisi başlatılıyor..."
-	@cd apps/backend && ./gradlew PathService:bootRun -q & >/dev/null 2>&1 || true
+	@cd apps/backend && chmod +x run-path-service.sh && ./run-path-service.sh & >/dev/null 2>&1 || true
 
 build-path-service:
 	@echo "Path servisi buildleniyor..."

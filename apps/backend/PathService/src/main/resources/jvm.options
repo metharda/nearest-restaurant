@@ -1,4 +1,8 @@
--Xms512m
--Xmx1g
+-Xms1g
+-Xmx2g
+-XX:+UseG1GC
+-XX:MaxGCPauseMillis=200
+-XX:+DisableExplicitGC
+-XX:+UseStringDeduplication
 -XX:+HeapDumpOnOutOfMemoryError
--XX:HeapDumpPath=/tmp
+-XX:HeapDumpPath=/tmp/heap_dump.hprof
