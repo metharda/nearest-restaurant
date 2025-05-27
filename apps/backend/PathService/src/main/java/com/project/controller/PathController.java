@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.http.ResponseEntity;
 import com.project.entity.Location;
 import com.project.datastructures.Graph;
-import com.project.datastructures.HashMap;
 
 @CrossOrigin(origins = "*")
 @RestController
