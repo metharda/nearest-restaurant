@@ -1,6 +1,6 @@
 package com.project.QueueService;
 
-import java.util.HashMap;
+import com.project.datastructures.HashMap;
 import com.project.Queue.Queue;
 
 public class QueueService {

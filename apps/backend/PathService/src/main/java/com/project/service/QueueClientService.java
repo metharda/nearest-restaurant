@@ -6,11 +6,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.Map;
+import com.project.datastructures.HashMap;
 
 @Service
 public class QueueClientService {
@@ -72,8 +70,10 @@ public class QueueClientService {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
                 // Handle exceptions
-                webSocketService.sendMessage("/topic/errors", 
-                        Map.of("requestId", requestId, "error", e.getMessage()));
+                HashMap<String, Object> errorMap = new HashMap<>();
+                errorMap.put("requestId", requestId);
+                errorMap.put("error", e.getMessage());
+                webSocketService.sendMessage("/topic/errors", errorMap);
             }
         });
         

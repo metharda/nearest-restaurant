@@ -4,9 +4,8 @@ import com.project.Queue.Queue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-
 import java.lang.reflect.Field;
-import java.util.HashMap;
+import com.project.datastructures.HashMap;
 
 public class QueueServiceTest {
 
