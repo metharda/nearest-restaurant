@@ -111,6 +111,17 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
                 </Badge>
               ))}
             </div>
+            <div>
+                <Button
+                    variant="default"
+                    className="w-full mt-2"
+                    onClick={() => {
+                    
+                    }}
+                >
+                    Yol Tarifi Al
+                </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
