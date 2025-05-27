@@ -11,7 +11,15 @@ import org.springframework.web.client.RestTemplate;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.datastructures.Graph;
 import com.project.datastructures.HashMap;
+import com.project.datastructures.Linkedlist;
+import com.project.datastructures.Node;
+import com.project.entity.Location;
+import com.project.utils.AStar;
 
 @Service
 public class QueueListenerService {
@@ -20,11 +28,11 @@ public class QueueListenerService {
     private static final String QUEUE_NAME = "path-requests";
     private static final String WEBSOCKET_TOPIC = "/topic/paths";
     private static final String ERROR_TOPIC = "/topic/errors";
-    
-    private final WebSocketService webSocketService;
+      private final WebSocketService webSocketService;
     private final RestTemplate restTemplate;
     private Thread pollingThread;
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     public QueueListenerService(WebSocketService webSocketService) {
@@ -69,9 +77,76 @@ public class QueueListenerService {
                             if (response.getStatusCode().is2xxSuccessful() && response.getStatusCode() != HttpStatus.NO_CONTENT) {
                                 String responseBody = response.getBody();
                                 // Check for valid JSON data
-                                if (responseBody != null && !responseBody.equals("null") && !responseBody.isEmpty() && !responseBody.trim().equals("{}")) {
-                                    // Send to all clients subscribed to the paths topic
-                                    webSocketService.sendMessage(WEBSOCKET_TOPIC, responseBody);
+                                if (responseBody != null && !responseBody.equals("null") && !responseBody.isEmpty() && !responseBody.trim().equals("{}")) {                                    Graph graph = Graph.getInstance();
+                                    JsonNode body = objectMapper.readTree(responseBody);
+                                    Long restaurantId = body.get("restaurantId").asLong();
+                                    Location restaurant = graph.findLocationById(graph.getRestaurants(), restaurantId);
+                                    
+                                    // Restaurant ve user_location null kontrolü
+                                    if (restaurant == null || graph.getUser_location() == null) {
+                                        // Restaurant veya kullanıcı konumu bulunamadığında hata mesajı gönder
+                                        HashMap<String, Object> errorJson = new HashMap<>();
+                                        errorJson.put("error", restaurant == null ? 
+                                            "Restaurant with ID " + restaurantId + " not found" : 
+                                            "User location not set");
+                                        errorJson.put("restaurantId", restaurantId.toString());
+                                        errorJson.put("status", "ERROR");
+                                        
+                                        if (body.has("requestId")) {
+                                            errorJson.put("requestId", body.get("requestId").asText());
+                                        }
+                                        
+                                        String errorResponse = objectMapper.writeValueAsString(errorJson);
+                                        webSocketService.sendMessage(ERROR_TOPIC, errorResponse);
+                                        System.err.println("Cannot calculate path: " + 
+                                            (restaurant == null ? "Restaurant not found" : "User location not set"));
+                                        continue;
+                                    }
+                                    
+                                    // A* algoritması ile yol hesapla
+                                    Linkedlist<Location> path = AStar.findPath(graph, graph.getUser_location(), restaurant);
+                                    
+                                    if (path != null) {
+                                        Location[] path_locations = new Location[path.length()];
+                                        Node<Location> current = path.head;
+
+                                        for(int i = 0; i<path.length(); ++i) {
+                                            path_locations[i] = current.value;
+                                            current = current.next;
+                                        }
+                                        
+                                        // Path verilerini içeren JSON oluştur
+                                        HashMap<String, Object> responseJson = new HashMap<>();
+                                        responseJson.put("requestId", body.has("requestId") ? body.get("requestId").asText() : "unknown");
+                                        responseJson.put("restaurantId", restaurantId.toString());
+                                        responseJson.put("path", path_locations);
+                                        responseJson.put("status", "COMPLETED");
+                                        
+                                        // Eğer latitude ve longitude bilgileri varsa ekle
+                                        if (body.has("latitude") && body.has("longitude")) {
+                                            responseJson.put("latitude", body.get("latitude").asText());
+                                            responseJson.put("longitude", body.get("longitude").asText());
+                                        }
+                                        
+                                        String jsonResponse = objectMapper.writeValueAsString(responseJson);
+
+                                        // Send to all clients subscribed to the paths topic
+                                        webSocketService.sendMessage(WEBSOCKET_TOPIC, jsonResponse);
+                                    } else {
+                                        // Yol bulunamadığında hata mesajı gönder
+                                        HashMap<String, Object> errorJson = new HashMap<>();
+                                        errorJson.put("error", "Path could not be calculated");
+                                        errorJson.put("restaurantId", restaurantId.toString());
+                                        errorJson.put("status", "ERROR");
+                                        
+                                        if (body.has("requestId")) {
+                                            errorJson.put("requestId", body.get("requestId").asText());
+                                        }
+                                        
+                                        String errorResponse = objectMapper.writeValueAsString(errorJson);
+                                        webSocketService.sendMessage(ERROR_TOPIC, errorResponse);
+                                        System.err.println("Path could not be calculated for restaurant ID: " + restaurantId);
+                                    }
                                 }
                             }
                             // For 404 (queue not found) or 204 (no content), just continue polling

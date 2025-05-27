@@ -162,7 +162,7 @@ public class Graph {
         addEdge(user_location, closest);
     }
 
-    private Location findLocationById(Linkedlist<Location> nodes, Long id) {
+    public Location findLocationById(Linkedlist<Location> nodes, Long id) {
         Node<Location> current = nodes.head;
 
         while(current != null) {
