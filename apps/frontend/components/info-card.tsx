@@ -1,5 +1,6 @@
 "use client"
 
+import { PathResponse } from "@/lib/types"
 import {
   Card,
   CardContent,
@@ -13,6 +14,9 @@ import { MapPin, Clock, Star, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getRestaurantInfo } from "@/lib/overpass"
 import { useEffect, useState } from "react"
+import { getPathtoRestaurant } from "@/lib/restaurant"
+import { getCurrentLocation } from "@/lib/location"
+
 
 interface InfoCardProps {
   isOpen: boolean
@@ -31,6 +35,7 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
     description: string
     features: string[]
   }>(null)
+  const [pathData, setPathData] = useState<PathResponse | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -54,6 +59,23 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
   }, [isOpen, restaurantId])
 
   if (!data) return null
+
+  let onGetPathClick = async () => {
+    try {
+      const userLocation = await getCurrentLocation();
+      await getPathtoRestaurant(restaurantId.toString(), userLocation.latitude, userLocation.longitude)
+      .then((response:any) => {
+        if (response instanceof Error) {
+          console.error("Failed to get path:", response.message);
+          return;
+        }
+        setPathData(response as PathResponse);
+        console.log("Path data received:", response);
+      })
+    } catch (error) {
+      console.error("Error getting path:", error);
+    }
+  }
 
   return (
     <div
@@ -112,15 +134,13 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
               ))}
             </div>
             <div>
-                <Button
-                    variant="default"
-                    className="w-full mt-2"
-                    onClick={() => {
-                    
-                    }}
-                >
-                    Yol Tarifi Al
-                </Button>
+              <Button
+                variant="default"
+                className="w-full mt-2"
+                onClick={onGetPathClick}
+              >
+                Yol Tarifi Al
+              </Button>
             </div>
           </div>
         </CardContent>
