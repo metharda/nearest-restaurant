@@ -1,5 +1,4 @@
 "use client"
-
 import { PathResponse } from "@/lib/types"
 import {
   Card,
@@ -36,8 +35,7 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
   }>(null)
   const [pathData, setPathData] = useState<PathResponse | null>(null)
   const [loading, setLoading] = useState(false)
-
-  
+  const [pathLoading, setPathLoading] = useState(false)
 
   useEffect(() => {
     if (!isOpen) return
@@ -72,20 +70,22 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
   }, [isOpen, restaurantId])
 
   if (!data) return null
+  
   let onGetPathClick = async () => {
     try {
+      setPathLoading(true)
+      console.log('Starting path request...');
       const userLocation = await getCurrentLocation();
+      console.log('User location:', userLocation);
+            
       await getPathtoRestaurant(restaurantId.toString(), userLocation.latitude, userLocation.longitude)
-      .then((response:any) => {
-        if (response instanceof Error) {
-          console.error("Failed to get path:", response.message);
-          return;
-        }
-        setPathData(response as PathResponse);
-        console.log("Path data received:", response);
-      })
+      
+      console.log("Path request initiated via WebSocket");
+      
     } catch (error) {
       console.error("Error getting path:", error);
+    } finally {
+      setPathLoading(false)
     }
   }
 
@@ -160,8 +160,9 @@ export function InfoCard({ isOpen, onClose, restaurantId }: InfoCardProps) {
                     variant="default"
                     className="w-full mt-2"
                     onClick={onGetPathClick}
+                    disabled={pathLoading}
                   >
-                    Yol Tarifi Al
+                    {pathLoading ? "Yol Tarifi Hesaplanıyor..." : "Yol Tarifi Al"}
                   </Button>
                 </div>
               </div>
