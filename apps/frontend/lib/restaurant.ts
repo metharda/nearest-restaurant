@@ -30,35 +30,28 @@ export async function getPathtoRestaurant(restaurantId: string, lat: number, lon
       heartbeatOutgoing: 4000
     });
 
-    stompClient.onConnect = () => {
-      console.log('STOMP connection established');
+    stompClient.onConnect = () => {    
 
       const subscription = stompClient.subscribe('/topic/paths', (message) => {
         try {
           try {
-            const pathData = JSON.parse(message.body) as PathResponse;
-            console.log('Received path data:', pathData);
+            const pathData = JSON.parse(message.body) as PathResponse;          
             
-            if ((window as any).mapVisualizationReady) {
-              console.log('🎯 Map is ready, calling visualization...');
+            if ((window as any).mapVisualizationReady) {            
         
-              if ((window as any).showPathOnMap) {
-                console.log('📞 Calling showPathOnMap from WebSocket');
+              if ((window as any).showPathOnMap) {              
                 (window as any).showPathOnMap(pathData);
               }
               
-              if ((window as any).handleWebSocketPathData) {
-                console.log('📞 Calling handleWebSocketPathData from WebSocket');
+              if ((window as any).handleWebSocketPathData) {              
                 (window as any).handleWebSocketPathData(pathData);
               }
-            } else {
-              console.log('⏳ Map not ready yet, waiting...');
+            } else {            
               
               let retries = 0;
               const retryInterval = setInterval(() => {
                 retries++;
-                if ((window as any).mapVisualizationReady && (window as any).showPathOnMap) {
-                  console.log(`✅ Map ready on retry ${retries}, calling visualization`);
+                if ((window as any).mapVisualizationReady && (window as any).showPathOnMap) {                
                   (window as any).showPathOnMap(pathData);
                   clearInterval(retryInterval);
                 } else if (retries >= 20) {
@@ -71,13 +64,11 @@ export async function getPathtoRestaurant(restaurantId: string, lat: number, lon
             (window as any).lastReceivedPathData = pathData;
             
           } catch (jsonError) {
-            console.error('Could not parse path data as JSON:', jsonError);
-            console.log('Raw message body:', message.body);
+            console.error('Could not parse path data as JSON:', jsonError);          
           }
 
           subscription.unsubscribe();
-          stompClient.deactivate();
-          console.log('WebSocket connection closed');
+          stompClient.deactivate();        
         } catch (error: any) {
           console.error('Error handling WebSocket response:', error);
         }
@@ -96,8 +87,7 @@ export async function getPathtoRestaurant(restaurantId: string, lat: number, lon
         .then(response => {
           if (response instanceof Error) {
             throw response;
-          }
-          console.log('Path request sent successfully:', response);
+          }        
         })
         .catch((error: any) => {
           console.error('Error requesting path:', error);

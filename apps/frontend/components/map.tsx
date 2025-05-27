@@ -41,8 +41,7 @@ export default function Map() {
     });
   };
 
-  const visualizePath = async (pathData: PathResponse) => {
-    console.log('🗺️ Starting path visualization with data:', pathData);
+  const visualizePath = async (pathData: PathResponse) => {    
     
     if (!leafletMapRef.current) {
       console.error('❌ No map reference available');
@@ -58,25 +57,19 @@ export default function Map() {
       });
       return;
     }
-
-    console.log('✅ Valid path data confirmed. Nodes:', pathData.path.length);
+    
 
     const L = (await import('leaflet')).default;
     
-    if (pathLayerRef.current) {
-      console.log('🧹 Removing existing path layer');
+    if (pathLayerRef.current) {      
       leafletMapRef.current.removeLayer(pathLayerRef.current);
       pathLayerRef.current = null;
     }
 
     const pathLayer = L.layerGroup();
-
     const allCoordinates: [number, number][] = pathData.path.map((node: any) => [node.latitude, node.longitude]);
-    
-    // Create coordinates for the path line (skip user location for the line)
     const pathCoordinates = pathData.path.slice(1).map((node: any) => [node.latitude, node.longitude]);
-
-    console.log('📍 Path coordinates prepared:', pathCoordinates.length);
+    
 
     if (pathCoordinates.length > 0) {
       // Create polyline for the path
@@ -86,16 +79,10 @@ export default function Map() {
         opacity: 0.8,
         smoothFactor: 1
       });
-      pathLayer.addLayer(pathLine);
-      console.log('➰ Path line added');
-
-      // Add blue dots along the path
+      pathLayer.addLayer(pathLine);      
       const blueDotIcon = createBlueDotIcon(L);
-      
-      // Add dots for intermediate nodes (skip first and last)
       let dotsAdded = 0;
       for (let i = 1; i < pathData.path.length - 1; i++) {
-        // Show every 5th node to avoid cluttering
         if (i % 5 === 0 || i === 1) {
           const node = pathData.path[i];
           const marker = L.marker([node.latitude, node.longitude], {
@@ -104,10 +91,7 @@ export default function Map() {
           pathLayer.addLayer(marker);
           dotsAdded++;
         }
-      }
-      console.log(`🔵 Added ${dotsAdded} blue dots`);
-
-      // Add destination marker
+      }     
       const destination = pathData.path[pathData.path.length - 1];
       if (destination) {
         const destMarker = L.marker([destination.latitude, destination.longitude], {
@@ -119,47 +103,29 @@ export default function Map() {
             <p style="margin: 0; font-size: 12px; color: #666;">📍 Destination</p>
           </div>
         `);
-        pathLayer.addLayer(destMarker);
-        console.log('🎯 Destination marker added for:', destination.name);
+        pathLayer.addLayer(destMarker);        
       }
 
-      // Add the path layer to the map
       pathLayer.addTo(leafletMapRef.current);
       pathLayerRef.current = pathLayer;
-
-      // Fit the map to show the entire path
       const bounds = L.latLngBounds(allCoordinates);
       leafletMapRef.current.fitBounds(bounds, { 
         padding: [30, 30],
         maxZoom: 16 
       });
-
-      console.log('🎉 Path visualization completed successfully!');
+      
     }
   };
 
-  // Set up global functions for WebSocket to call
-  useEffect(() => {
-    console.log('🚀 Setting up map visualization functions');
-    
-    // Primary function for WebSocket to call
-    (window as any).showPathOnMap = (pathData: PathResponse) => {
-      console.log('📞 showPathOnMap called from WebSocket with:', pathData);
+  useEffect(() => {    
+    (window as any).showPathOnMap = (pathData: PathResponse) => {      
       visualizePath(pathData);
     };
-
-    // Backup function
-    (window as any).handleWebSocketPathData = (pathData: PathResponse) => {
-      console.log('📞 handleWebSocketPathData called with:', pathData);
+    (window as any).handleWebSocketPathData = (pathData: PathResponse) => {      
       visualizePath(pathData);
     };
-
-    // Indicate functions are ready
-    (window as any).mapVisualizationReady = true;
-    console.log('✅ Map visualization functions are ready');
-
-    return () => {
-      console.log('🧹 Cleaning up map visualization functions');
+    (window as any).mapVisualizationReady = true;    
+    return () => {      
       delete (window as any).showPathOnMap;
       delete (window as any).handleWebSocketPathData;
       delete (window as any).mapVisualizationReady;
@@ -209,8 +175,7 @@ export default function Map() {
             setSelectedId(restaurant.id);
           });
         });
-        leafletMapRef.current = map;
-        console.log('🗺️ Map initialized successfully');
+        leafletMapRef.current = map;        
         
       } catch (error) {
         console.error('❌ Failed to initialize map:', error);
