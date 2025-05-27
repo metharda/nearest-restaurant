@@ -1,9 +1,10 @@
 'use client'
 import { ChefHat, MapPin, MapPinIcon } from "lucide-react"
 import { fetchRestaurants } from "@/lib/restaurant"
-import { getCurrentLocation } from "@/lib/location"
+import { getCurrentLocation, calcDistance } from "@/lib/location"
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useInfoCard } from '@/components/info-card-context'
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +22,7 @@ interface Restaurant {
   name: string
   latitude: number
   longitude: number
+  distance?: number
 }
 
 interface SidebarAppProps {
@@ -31,6 +33,7 @@ export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [locationError, setLocationError] = useState<string | null>(null)
+  const { setFocusRestaurant, setSelectedId } = useInfoCard();
 
   useEffect(() => {
     const loadRestaurants = async () => {
@@ -41,7 +44,28 @@ export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
           latitude,
           longitude
         )
-        setRestaurants(response.restaurants || [])
+        const restaurantsWithDistance = await Promise.all(
+          (response.restaurants || []).map(async (restaurant: Restaurant) => {
+            try {
+              const distance: number = await calcDistance(
+                restaurant.latitude,
+                restaurant.longitude
+              )
+              return { ...restaurant, distance: distance }
+            } catch (error) {
+              console.error(`Failed to calculate distance for ${restaurant.name}:`, error)
+              return { ...restaurant, distance: 0 }
+            }
+          })
+        )
+
+        const sortedRestaurants = restaurantsWithDistance.sort((a, b) => {
+          const distanceA = a.distance || 0
+          const distanceB = b.distance || 0
+          return distanceA - distanceB
+        })
+        
+        setRestaurants(sortedRestaurants)
         setLocationError(null)
       } catch (error) {
         console.error('Failed to fetch restaurants:', error)
@@ -53,7 +77,6 @@ export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
     loadRestaurants()
   }, [])
 
-  // Filter out generic "Restaurant" names and create menu items
   const restaurantItems = restaurants
     .filter((restaurant) => restaurant.name !== "Restaurant")
     .map((restaurant) => ({
@@ -61,14 +84,15 @@ export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
       icon: ChefHat,
       id: restaurant.id,
       coordinates: `${restaurant.latitude.toFixed(6)}, ${restaurant.longitude.toFixed(6)}`,
+      distance: restaurant.distance || 0,
       restaurant: restaurant
     }))
 
   const handleRestaurantClick = (restaurant: Restaurant) => {
-    if (onRestaurantClick) {
-      onRestaurantClick(restaurant)
-    }
-  }
+    onRestaurantClick?.(restaurant);
+    setSelectedId(restaurant.id);
+    setFocusRestaurant(restaurant);  
+  };
 
   return (
     <Sidebar variant="floating" className="w-80">
@@ -121,10 +145,16 @@ export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
                           <div className="font-medium text-sm text-gray-900 mb-0.5 group-hover:text-gray-800 transition-colors duration-200">
                             {item.title}
                           </div>
-                            <div className="text-xs text-gray-500 flex items-center gap-1">
+                          <div className="text-xs text-gray-500 flex items-center gap-1">
                             <span>📍</span>
                             {item.coordinates}
-                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {item.distance.toFixed(4)} km
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -141,9 +171,9 @@ export function SidebarApp({ onRestaurantClick }: SidebarAppProps) {
                 </SidebarMenuItem>
               )}
             </SidebarMenu>
-    </SidebarGroupContent>
+          </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-        </Sidebar>
-      )
-    }
+    </Sidebar>
+  )
+}
