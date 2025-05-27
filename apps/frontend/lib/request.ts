@@ -23,11 +23,21 @@ export async function MakeRequest(
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null)
-      return new Error(errorData?.message || `API request failed: ${response.statusText}`)
+      const errorData = await response.text()
+      try {
+        const jsonError = JSON.parse(errorData)
+        return new Error(jsonError?.message || `API request failed: ${response.statusText}`)
+      } catch (e) {
+        return new Error(`API request failed: ${response.statusText}. Response: ${errorData.substring(0, 100)}`)
+      }
     }
-
-    return response.json()
+    
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      return response.json()
+    } else {
+      return response.text()
+    }
   } catch (error) {
     console.error('API Request Error:', error)
     return error

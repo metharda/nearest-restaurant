@@ -24,6 +24,14 @@ subprojects{
 			options.encoding = 'UTF-8'
 		}
 	}
+	
+	tasks.withType(org.springframework.boot.gradle.tasks.run.BootRun) {
+		jvmArgs = [
+			'-Xmx1g',
+			'-XX:+HeapDumpOnOutOfMemoryError',
+			'-XX:HeapDumpPath=/tmp'
+		]
+	}
 
 	dependencyManagement {
 		imports {
