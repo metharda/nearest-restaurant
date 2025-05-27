@@ -4,16 +4,14 @@ import com.project.dto.response.PathResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.project.datastructures.HashMap;
 
 @Service
 public class QueueListenerService {
 
     private final WebSocketService webSocketService;
     private final RestTemplate restTemplate;
-    private final Map<String, String> requestIdToSessionId = new ConcurrentHashMap<>();
+    private final HashMap<String, String> requestIdToSessionId = new HashMap<>();
 
     public QueueListenerService(WebSocketService webSocketService) {
         this.webSocketService = webSocketService;
@@ -46,13 +44,14 @@ public class QueueListenerService {
 
                     // Wait before polling again to avoid overwhelming the queue service
                     Thread.sleep(1000);
-                }
-            } catch (InterruptedException e) {
+                }            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
                 // Handle exceptions, may want to inform client about errors
-                webSocketService.sendMessage("/topic/errors", 
-                        Map.of("requestId", requestId, "error", e.getMessage()));
+                HashMap<String, Object> errorMap = new HashMap<>();
+                errorMap.put("requestId", requestId);
+                errorMap.put("error", e.getMessage());
+                webSocketService.sendMessage("/topic/errors", errorMap);
             }
         });
         
